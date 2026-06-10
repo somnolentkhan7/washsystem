@@ -1,10 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import {
+import { useMemo, useState, useEffect } from "react";import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, LineChart, Line, CartesianGrid,
 } from "recharts";
+
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(
+  typeof window !== "undefined" ? window.innerWidth < breakpoint : false
+);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < breakpoint);
+
+    check();
+    window.addEventListener("resize", check);
+
+    return () => window.removeEventListener("resize", check);
+  }, [breakpoint]);
+
+  return isMobile;
+}
 
 /* ---------------- TYPES ---------------- */
 type Customer = {
@@ -40,9 +56,7 @@ function formatMonthLabel(dateStr: string) {
 
 /* ---------------- COMPONENT ---------------- */
 export default function InsightsTab({ customers }: { customers: Customer[] }) {
-    const isMobile =
-  typeof window !== "undefined" &&
-  window.innerWidth < 768;
+    const isMobile = useIsMobile();
   const [revenueView, setRevenueView] = useState<"month" | "week">("month");
 
   const completed = useMemo(() => customers.filter((c) => c.completed && c.paid && c.date), [customers]);
@@ -159,6 +173,14 @@ const upsellRate = useMemo(() => {
   /* --- Summary stats --- */
   const totalRevenue = useMemo(() => completed.reduce((s, c) => s + c.price, 0), [completed]);
   const avgValue = useMemo(() => completed.length ? Math.round(totalRevenue / completed.length) : 0, [completed, totalRevenue]);
+const statRowStyle = {
+  display: "grid",
+  gridTemplateColumns: isMobile
+    ? "1fr 1fr"
+    : "repeat(auto-fit, minmax(140px, 1fr))",
+  gap: 12,
+  marginBottom: 16,
+};
 
   if (completed.length === 0) {
     return (
@@ -173,7 +195,7 @@ const upsellRate = useMemo(() => {
   return (
     <div>
       {/* SUMMARY ROW */}
-      <div style={s.statRow}>
+      <div style={statRowStyle}>
         <StatBox label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} />
         <StatBox label="Jobs Completed" value={completed.length} />
         <StatBox label="Avg Job Value" value={`$${avgValue}`} />
@@ -182,7 +204,7 @@ const upsellRate = useMemo(() => {
       </div>
 
       {/* BEST DAY / BEST WEEK */}
-      <div style={s.statRow}>
+      <div style={statRowStyle}>
         <div style={s.highlightCard}>
           <div style={s.highlightLabel}>🏆 Best Day</div>
           {bestDay ? (
@@ -327,16 +349,6 @@ const s: any = {
   emptyTitle: { fontSize: 18, fontWeight: 600, marginBottom: 6 },
   emptySub: { opacity: 0.5, fontSize: 14 },
 
-  statRow: {
-  display: "grid",
-  gridTemplateColumns:
-    typeof window !== "undefined" &&
-    window.innerWidth < 768
-      ? "1fr 1fr"
-      : "repeat(auto-fit, minmax(140px, 1fr))",
-  gap: 12,
-  marginBottom: 16,
-},
   statBox: {
     background: "#fff",
     borderRadius: 14,
