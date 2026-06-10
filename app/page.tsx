@@ -24,6 +24,8 @@ const getDateKey = (date: Date) => date.toISOString().split("T")[0];
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
+const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
   const [tab, setTab] = useState<
     "dashboard" | "jobs" | "map" | "calendar"
   >("dashboard");
@@ -248,7 +250,11 @@ async function moveCustomerToDate(
         <p style={{ opacity: 0.5 }}>No jobs today</p>
       ) : (
         todayJobs.map((c) => (
-          <div key={c.id} style={styles.item}>
+  <div
+    key={c.id}
+    style={{ ...styles.item, cursor: "pointer" }}
+    onClick={() => setSelectedCustomer(c)}
+  >
             <div style={{ ...styles.name, display: "flex", alignItems: "center", gap: 8 }}>
   {c.name}
 
@@ -522,6 +528,71 @@ async function moveCustomerToDate(
 
       {/* MAP */}
       {tab === "map" && <MapView customers={customers} />}
+      {selectedCustomer && (
+  <div
+    onClick={() => setSelectedCustomer(null)}
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: "rgba(0,0,0,0.4)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        background: "white",
+        padding: 20,
+        borderRadius: 16,
+        width: "90%",
+        maxWidth: 400,
+      }}
+    >
+      <h3>{selectedCustomer.name}</h3>
+      <p>{selectedCustomer.address}</p>
+
+      <p>
+        Status: {selectedCustomer.completed ? "Done" : "Not Done"}
+      </p>
+
+      <button
+        onClick={async () => {
+          await toggleComplete(selectedCustomer);
+          setSelectedCustomer(null);
+        }}
+        style={{
+          width: "100%",
+          padding: 10,
+          marginTop: 10,
+          background: "#1d1d1f",
+          color: "#fff",
+          border: "none",
+          borderRadius: 10,
+        }}
+      >
+        Mark Complete
+      </button>
+
+      <button
+        onClick={() => setSelectedCustomer(null)}
+        style={{
+          width: "100%",
+          padding: 10,
+          marginTop: 8,
+          border: "1px solid #ccc",
+          borderRadius: 10,
+        }}
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
     </main>
   );
 }
