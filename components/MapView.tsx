@@ -1,6 +1,11 @@
 "use client";
 
-import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  Marker,
+  Polyline,
+  useLoadScript,
+} from "@react-google-maps/api";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -42,7 +47,14 @@ export default function MapView({
     return "red";
   }
 
-  /* ---------------- TOGGLE COMPLETE (REAL DB UPDATE) ---------------- */
+  /* ---------------- TODAY ROUTE LINE ---------------- */
+  const todayKey = new Date().toISOString().split("T")[0];
+
+  const todayRoute = customers
+    .filter((c) => c.date === todayKey && c.lat && c.lng)
+    .map((c) => ({ lat: c.lat!, lng: c.lng! }));
+
+  /* ---------------- TOGGLE COMPLETE ---------------- */
   async function toggleComplete(customer: Customer) {
     const { error } = await supabase
       .from("customers")
@@ -54,8 +66,8 @@ export default function MapView({
       return;
     }
 
-    setSelected(null);     // close popup
-    refreshCustomers();    // reload map data
+    setSelected(null);
+    refreshCustomers();
   }
 
   return (
@@ -72,6 +84,16 @@ export default function MapView({
           borderRadius: 16,
         }}
       >
+        {/* ---------------- ROUTE LINE (TODAY) ---------------- */}
+        <Polyline
+          path={todayRoute}
+          options={{
+            strokeColor: "#1d1d1f",
+            strokeOpacity: 0.8,
+            strokeWeight: 4,
+          }}
+        />
+
         {/* ---------------- PINS ---------------- */}
         {customers
           .filter((c) => c.lat && c.lng)
