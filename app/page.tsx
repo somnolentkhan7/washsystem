@@ -20,6 +20,9 @@ type Customer = {
   lng?: number;
   time?: string;
   duration?: number;
+  paid?: boolean;
+  payment_method?: string;
+  upsells?: string[];
 };
 
 /* ---------------- CONSTANTS ---------------- */
@@ -79,6 +82,21 @@ function calcArrivalTimes(jobs: Customer[], startTime: string) {
 /* ---------------- PAGE ---------------- */
 export default function Home() {
   const [calendarView, setCalendarView] = useState<"week" | "month">("week");
+  const [isMobile, setIsMobile] = useState(false);
+
+useEffect(() => {
+  const checkMobile = () => {
+    setIsMobile(window.innerWidth < 768);
+  };
+
+  checkMobile();
+
+  window.addEventListener("resize", checkMobile);
+
+  return () => {
+    window.removeEventListener("resize", checkMobile);
+  };
+}, []);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insights">("dashboard");  const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">("all");
@@ -103,6 +121,13 @@ const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insi
     if (error) { console.log(error); return; }
     setCustomers(data || []);
   }, []);
+  async function updateCustomer(id: string, fields: Partial<Customer>) {
+  await supabase.from("customers").update(fields).eq("id", id);
+  const { data: all } = await supabase.from("customers").select("*");
+  if (all) setCustomers(all);
+  const updated = all?.find((c) => c.id === id);
+  if (updated) setSelectedCustomer(updated);
+}
 
   useEffect(() => { loadCustomers(); }, [loadCustomers]);
 
@@ -122,18 +147,21 @@ const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insi
     if (!form.name || !form.address) return;
     try {
       const coords = await geocodeAddress(form.address);
-      const { error } = await supabase.from("customers").insert([{
-        name: form.name,
-        phone: form.phone,
-        address: form.address,
-        price: Number(form.price || 0),
-        date: form.date,
-        completed: false,
-        services: form.services,
-        notes: form.notes,
-        lat: coords?.lat ?? null,
-        lng: coords?.lng ?? null,
-      }]);
+      const upsells = form.services.filter((s) => s !== "Driveway");
+
+const { error } = await supabase.from("customers").insert([{
+  name: form.name,
+  phone: form.phone,
+  address: form.address,
+  price: Number(form.price || 0),
+  date: form.date,
+  completed: false,
+  services: form.services,
+  notes: form.notes,
+  upsells,
+  lat: coords?.lat ?? null,
+  lng: coords?.lng ?? null,
+}]);
       if (error) { alert(error.message); return; }
       loadCustomers();
       setForm({ name: "", phone: "", address: "", price: "", date: "", notes: "", services: [] });
@@ -198,9 +226,9 @@ const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insi
   );
 
   const revenue = useMemo(
-    () => customers.filter((c) => c.completed).reduce((sum, c) => sum + c.price, 0),
-    [customers]
-  );
+  () => customers.filter((c) => c.completed && c.paid).reduce((sum, c) => sum + c.price, 0),
+  [customers]
+);
 
   const completed = useMemo(() => customers.filter((c) => c.completed).length, [customers]);
   const pending = useMemo(() => customers.length - completed, [customers, completed]);
@@ -269,6 +297,15 @@ const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insi
                   <div style={{ ...styles.name, display: "flex", alignItems: "center", gap: 8 }}>
                     {c.name}
                     <StatusBadge completed={c.completed} />
+                    {c.paid !== undefined && (
+  <span style={{
+    fontSize: 10, padding: "2px 8px", borderRadius: 999,
+    background: c.paid ? "#dcfce7" : "#fee2e2",
+    color: c.paid ? "#166534" : "#991b1b",
+  }}>
+    {c.paid ? "PAID" : "UNPAID"}
+  </span>
+)}
                   </div>
                   <div style={styles.sub}>{c.address}</div>
                   {c.services?.length > 0 && (
@@ -320,12 +357,12 @@ const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insi
           </div>
 
           {/* METRICS */}
-          <div style={styles.grid}>
-            <Card title="Total Jobs" value={customers.length} />
-            <Card title="Completed" value={completed} />
-            <Card title="Pending" value={pending} />
-            <Card title="Revenue" value={`$${revenue}`} />
-          </div>
+          {/* METRICS */}
+            <div style={styles.grid}>
+              <Card title="Today's Jobs" value={todayJobs.length} />
+              <Card title="Completed" value={todayJobs.filter(c => c.completed).length} />
+              <Card title="Pending" value={todayJobs.filter(c => !c.completed).length} />
+              <Card title="Today's Revenue" value={`$${todayJobs.filter(c => c.completed && c.paid).reduce((sum, c) => sum + c.price, 0)}`} />            </div>
         </>
       )}
 
@@ -424,9 +461,37 @@ const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insi
               )}
               <div style={styles.price}>${c.price}</div>
               <div style={styles.row}>
-                <button onClick={() => toggleComplete(c)}>{c.completed ? "Undo" : "Complete"}</button>
-                <button onClick={() => deleteCustomer(c.id)}>Delete</button>
-              </div>
+  <button
+    onClick={() => toggleComplete(c)}
+    style={{
+      padding: "7px 14px",
+      borderRadius: 999,
+      border: "none",
+      background: c.completed ? "#f3f4f6" : "#1d1d1f",
+      color: c.completed ? "#111" : "#fff",
+      fontSize: 12,
+      fontWeight: 600,
+      cursor: "pointer",
+    }}
+  >
+    {c.completed ? "↩ Undo" : "✓ Complete"}
+  </button>
+  <button
+    onClick={() => deleteCustomer(c.id)}
+    style={{
+      padding: "7px 14px",
+      borderRadius: 999,
+      border: "1px solid #fecaca",
+      background: "#fff5f5",
+      color: "#dc2626",
+      fontSize: 12,
+      fontWeight: 600,
+      cursor: "pointer",
+    }}
+  >
+    🗑 Delete
+  </button>
+</div>
             </div>
           ))}
         </div>
@@ -524,7 +589,18 @@ const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insi
       {tab === "insights" && <InsightsTab customers={customers} />}
 
       {/* MAP */}
-      {tab === "map" && <MapView customers={customers} refreshCustomers={loadCustomers} />}
+      {tab === "map" && <div
+  style={{
+    height: isMobile
+      ? "calc(100vh - 120px)"
+      : "75vh",
+  }}
+>
+  <MapView
+    customers={customers}
+    refreshCustomers={loadCustomers}
+  />
+</div>}
 
       {/* CUSTOMER MODAL */}
       {selectedCustomer && (
@@ -534,8 +610,19 @@ const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insi
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ background: "#ffffff", padding: 20, borderRadius: 18, width: "90%", maxWidth: 420, boxShadow: "0 10px 30px rgba(0,0,0,0.15)", fontFamily: "-apple-system, BlinkMacSystemFont, SF Pro Display, Inter, sans-serif" }}
-          >
+          style={{
+  background: "#ffffff",
+  padding: isMobile ? 16 : 20,
+  borderRadius: isMobile ? 0 : 18,
+  width: isMobile ? "100%" : "90%",
+  height: isMobile ? "100%" : "auto",
+  maxWidth: 420,
+  overflowY: "auto",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, SF Pro Display, Inter, sans-serif",
+}}
+>
             <h2 style={{ marginBottom: 6 }}>{selectedCustomer.name}</h2>
             <StatusBadge completed={selectedCustomer.completed} large />
             <p style={{ opacity: 0.6, marginBottom: 10 }}>{selectedCustomer.address}</p>
@@ -544,15 +631,110 @@ const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insi
               <div>🧼 <strong>Service:</strong> {selectedCustomer.services?.length ? selectedCustomer.services.join(", ") : "No service selected"}</div>
               <div>💵 <strong>Price:</strong> ${selectedCustomer.price}</div>
               <div>📊 <strong>Status:</strong> {selectedCustomer.completed ? "Completed" : "Pending"}</div>
+              <div style={{ marginTop: 12 }}>
+  <strong>💰 Payment</strong>
+  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+    <button
+      onClick={async () => {
+        await updateCustomer(selectedCustomer.id, { paid: true });
+      }}
+      style={{
+        flex: 1,
+        padding: "8px 0",
+        borderRadius: 10,
+        border: "none",
+        background: selectedCustomer.paid ? "#16a34a" : "#f0fdf4",
+        color: selectedCustomer.paid ? "#fff" : "#16a34a",
+        fontWeight: 600,
+        fontSize: 13,
+        cursor: "pointer",
+        transition: "0.15s ease",
+      }}
+    >
+      ✓ Paid
+    </button>
+    <button
+      onClick={async () => {
+        await updateCustomer(selectedCustomer.id, { paid: false });
+      }}
+      style={{
+        flex: 1,
+        padding: "8px 0",
+        borderRadius: 10,
+        border: "none",
+        background: !selectedCustomer.paid ? "#dc2626" : "#fef2f2",
+        color: !selectedCustomer.paid ? "#fff" : "#dc2626",
+        fontWeight: 600,
+        fontSize: 13,
+        cursor: "pointer",
+        transition: "0.15s ease",
+      }}
+    >
+      ✗ Unpaid
+    </button>
+  </div>
+</div>
+
+<div style={{ marginTop: 10 }}>
+  <strong>💳 Payment Method:</strong>
+  <select
+    value={selectedCustomer.payment_method || ""}
+    onChange={async (e) => {
+  await updateCustomer(selectedCustomer.id, { payment_method: e.target.value });
+}}
+    style={{ marginLeft: 8, padding: "4px 8px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13 }}
+  >
+    <option value="">Not set</option>
+    <option value="Cash">Cash</option>
+    <option value="Venmo">Venmo</option>
+    <option value="Card">Card</option>
+  </select>
+</div>
+
+<div style={{ marginTop: 10 }}>
+  <strong>⬆️ Upsells:</strong>
+  <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 6 }}>
+    {["Driveway", "Sidewalk", "Patio", "Trashcans"].map((service) => {
+      const active = selectedCustomer.upsells?.includes(service);
+      return (
+        <button
+          key={service}
+          onClick={async () => {
+  const currentUpsells = selectedCustomer.upsells || [];
+  const updatedUpsells = active
+    ? currentUpsells.filter((s) => s !== service)
+    : [...currentUpsells, service];
+  
+  // keep Driveway if it was in services, then add all upsells
+  const baseServices = (selectedCustomer.services || []).filter(s => s === "Driveway");
+  const updatedServices = [...new Set([...baseServices, ...updatedUpsells])];
+
+  await updateCustomer(selectedCustomer.id, {
+    upsells: updatedUpsells,
+    services: updatedServices,
+  });
+}}
+          style={{
+            padding: "4px 10px", borderRadius: 999, fontSize: 12,
+            border: "1px solid #ddd", cursor: "pointer",
+            background: active ? "#1d1d1f" : "#fff",
+            color: active ? "#fff" : "#000",
+          }}
+        >
+          {service}
+        </button>
+      );
+    })}
+  </div>
+</div>
               <div style={{ marginTop: 10 }}>
                 <strong>⏰ Time:</strong>
                 <input
                   type="time"
                   defaultValue={selectedCustomer.time || ""}
                   onChange={async (e) => {
-                    await supabase.from("customers").update({ time: e.target.value }).eq("id", selectedCustomer.id);
-                    loadCustomers();
-                  }}
+  await updateCustomer(selectedCustomer.id, { time: e.target.value });
+}}
                   style={{ marginLeft: 8, padding: "4px 8px", borderRadius: 8, border: "1px solid #ddd" }}
                 />
               </div>
@@ -562,9 +744,8 @@ const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insi
                   type="number"
                   defaultValue={selectedCustomer.duration || ""}
                   onChange={async (e) => {
-                    await supabase.from("customers").update({ duration: Number(e.target.value) }).eq("id", selectedCustomer.id);
-                    loadCustomers();
-                  }}
+  await updateCustomer(selectedCustomer.id, { duration: Number(e.target.value) });
+}}
                   style={{ marginLeft: 8, padding: "4px 8px", borderRadius: 8, border: "1px solid #ddd", width: 70 }}
                 />
               </div>
@@ -644,14 +825,23 @@ const styles: any = {
   name: { fontWeight: 600, fontSize: 15 },
   sub: { opacity: 0.6, fontSize: 13, marginTop: 2 },
   price: { marginTop: 6, fontWeight: 600 },
-  row: { display: "flex", gap: 10, marginTop: 10 },
+  row: {
+  display: "flex",
+  gap: 10,
+  marginTop: 10,
+  flexWrap: "wrap",
+},
 };
 
 const calBtn = { padding: "6px 12px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer" };
 const calBtnPrimary = { padding: "6px 12px", borderRadius: 10, border: "1px solid #111", background: "#111", color: "#fff", fontSize: 12, cursor: "pointer" };
 
 const weekStyles: any = {
-  grid: { display: "grid", gridTemplateColumns: "repeat(7, minmax(120px, 1fr))", overflowX: "auto", gap: 8 },
+  grid: { display: "grid", 
+  gridTemplateColumns: typeof window !== "undefined" &&
+  window.innerWidth < 768
+    ? "1fr"
+    : "repeat(7, minmax(120px, 1fr))", overflowX: "auto", gap: 8 },
   day: { background: "#fff", padding: 10, borderRadius: 10, minHeight: 180 },
   header: { fontSize: 12, fontWeight: 600, marginBottom: 8 },
   job: { background: "#f5f5f5", padding: 6, borderRadius: 8, marginBottom: 6 },

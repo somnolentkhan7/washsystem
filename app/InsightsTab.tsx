@@ -14,6 +14,9 @@ type Customer = {
   date: string;
   completed: boolean;
   services: string[];
+  paid?: boolean;
+  payment_method?: string;
+  upsells?: string[];
 };
 
 /* ---------------- HELPERS ---------------- */
@@ -39,7 +42,25 @@ function formatMonthLabel(dateStr: string) {
 export default function InsightsTab({ customers }: { customers: Customer[] }) {
   const [revenueView, setRevenueView] = useState<"month" | "week">("month");
 
-  const completed = useMemo(() => customers.filter((c) => c.completed && c.date), [customers]);
+  const completed = useMemo(() => customers.filter((c) => c.completed && c.paid && c.date), [customers]);
+  const unpaidRevenue = useMemo(
+  () => completed.filter((c) => !c.paid).reduce((s, c) => s + c.price, 0),
+  [completed]
+);
+
+const paymentMethods = useMemo(() => {
+  const map: Record<string, number> = {};
+  for (const c of completed) {
+    const m = c.payment_method || "Not set";
+    map[m] = (map[m] || 0) + 1;
+  }
+  return Object.entries(map).sort(([, a], [, b]) => b - a);
+}, [completed]);
+
+const upsellRate = useMemo(() => {
+  const withUpsells = completed.filter((c) => c.upsells?.length).length;
+  return completed.length ? Math.round((withUpsells / completed.length) * 100) : 0;
+}, [completed]);
 
   /* --- Revenue by month --- */
   const revenueByMonth = useMemo(() => {
@@ -153,6 +174,8 @@ export default function InsightsTab({ customers }: { customers: Customer[] }) {
         <StatBox label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} />
         <StatBox label="Jobs Completed" value={completed.length} />
         <StatBox label="Avg Job Value" value={`$${avgValue}`} />
+        <StatBox label="Unpaid Revenue" value={`$${unpaidRevenue}`} />
+        <StatBox label="Upsell Rate" value={`${upsellRate}%`} />    
       </div>
 
       {/* BEST DAY / BEST WEEK */}
@@ -262,6 +285,21 @@ export default function InsightsTab({ customers }: { customers: Customer[] }) {
           </>
         )}
       </div>
+      <div style={s.card}>
+  <div style={s.cardHeader}>
+    <h3 style={s.cardTitle}>Payment Methods</h3>
+  </div>
+  {paymentMethods.length === 0 ? (
+    <div style={s.chartEmpty}>No payment data yet.</div>
+  ) : (
+    paymentMethods.map(([method, count]) => (
+      <div key={method} style={s.serviceRow}>
+        <div style={s.serviceName}>{method}</div>
+        <div style={s.serviceCount}>{count} job{count !== 1 ? "s" : ""}</div>
+      </div>
+    ))
+  )}
+</div>
     </div>
   );
 }
