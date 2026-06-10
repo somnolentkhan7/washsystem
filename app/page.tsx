@@ -21,10 +21,8 @@ type Customer = {
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
-  useEffect(() => {
-  console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-  console.log("SUPABASE KEY EXISTS:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-}, []);
+console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   const [tab, setTab] = useState<"dashboard" | "jobs" | "map">("dashboard");
   const [customers, setCustomers] = useState<Customer[]>([]);
