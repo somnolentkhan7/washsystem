@@ -66,12 +66,14 @@ function SwipeRow({ children }: { children: React.ReactNode }) {
         paddingBottom: 8,
         scrollSnapType: "x mandatory",
         WebkitOverflowScrolling: "touch",
+        scrollbarWidth: "none",
       }}
     >
       {children}
     </div>
   );
 }
+
 
 /* ---------------- COMPONENT ---------------- */
 export default function InsightsTab({
