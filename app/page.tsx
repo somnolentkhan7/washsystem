@@ -561,7 +561,10 @@ async function moveCustomerToDate(
       )}
 
       {/* MAP */}
-      {tab === "map" && <MapView customers={customers} />}
+      {tab === "map" && <MapView
+  customers={customers}
+  refreshCustomers={loadCustomers}
+/>}
       {selectedCustomer && (
   <div
     onClick={() => setSelectedCustomer(null)}
