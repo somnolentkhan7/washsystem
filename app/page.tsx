@@ -628,7 +628,7 @@ const { error } = await supabase.from("customers").insert([{
       {selectedCustomer && (
         <div
           onClick={() => setSelectedCustomer(null)}
-          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}
+          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999,}}
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -839,7 +839,7 @@ const styles: any = {
 
   position: "sticky",
   top: 0,
-  zIndex: 100,
+  zIndex: 10,
 
   padding: "12px 10px",
   marginBottom: 16,
