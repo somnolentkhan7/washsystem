@@ -249,7 +249,21 @@ async function moveCustomerToDate(
       ) : (
         todayJobs.map((c) => (
           <div key={c.id} style={styles.item}>
-            <div style={styles.name}>{c.name}</div>
+            <div style={{ ...styles.name, display: "flex", alignItems: "center", gap: 8 }}>
+  {c.name}
+
+  <span
+    style={{
+      fontSize: 10,
+      padding: "2px 8px",
+      borderRadius: 999,
+      background: c.completed ? "#dcfce7" : "#fef9c3",
+      color: c.completed ? "#166534" : "#92400e",
+    }}
+  >
+    {c.completed ? "DONE" : "PENDING"}
+  </span>
+</div>
             <div style={styles.sub}>{c.address}</div>
             {c.services?.length > 0 && (
   <div style={{ fontSize: 12, opacity: 0.6 }}>
@@ -399,7 +413,21 @@ async function moveCustomerToDate(
             })
             .map((c) => (
               <div key={c.id} style={styles.item}>
-                <div style={styles.name}>{c.name}</div>
+                <div style={{ ...styles.name, display: "flex", alignItems: "center", gap: 8 }}>
+  {c.name}
+
+  <span
+    style={{
+      fontSize: 10,
+      padding: "2px 8px",
+      borderRadius: 999,
+      background: c.completed ? "#dcfce7" : "#fef9c3",
+      color: c.completed ? "#166534" : "#92400e",
+    }}
+  >
+    {c.completed ? "DONE" : "PENDING"}
+  </span>
+</div>
                 <div style={styles.sub}>{c.address}</div>
                 {c.services?.length > 0 && (
                   <div style={{ fontSize: 12, opacity: 0.6 }}>
