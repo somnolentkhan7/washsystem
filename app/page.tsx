@@ -229,20 +229,59 @@ const monthDays = Array.from({ length: 35 }).map((_, i) => {
 /* ---------------- SCHEDULE ---------------- */
 function calcArrivalTimes(jobs: Customer[], startTime: string) {
   const results: { id: string; arrival: string }[] = [];
-  const [startHour, startMin] = startTime.split(":").map(Number);
-  let totalMins = startHour * 60 + startMin;
+  
+  const toMins = (time: string) => {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+  };
+  
+  const toTime = (mins: number) => {
+    const h = Math.floor(mins / 60) % 24;
+    const m = mins % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  };
 
-  for (const job of jobs) {
-    const hours = Math.floor(totalMins / 60) % 24;
-    const mins = totalMins % 60;
-    const arrival = `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
-    results.push({ id: job.id, arrival });
-    totalMins += job.duration || 60; // default 60 mins if no duration set
+  // split into fixed and flexible
+  const fixed = jobs.filter((j) => j.time).sort((a, b) => toMins(a.time!) - toMins(b.time!));
+  const flexible = jobs.filter((j) => !j.time);
+
+  // build a merged schedule
+  const schedule: { job: Customer; arrival: number; fixed: boolean }[] = [];
+
+  for (const j of fixed) {
+    schedule.push({ job: j, arrival: toMins(j.time!), fixed: true });
+  }
+
+  // slot flexible jobs starting from dayStartTime, skipping over fixed blocks
+  let cursor = toMins(startTime);
+
+  for (const j of flexible) {
+    // skip forward if cursor overlaps a fixed job
+    for (const f of schedule.filter((s) => s.fixed)) {
+      const fEnd = f.arrival + (f.job.duration || 60);
+      if (cursor < fEnd && cursor + (j.duration || 60) > f.arrival) {
+        cursor = fEnd;
+      }
+    }
+    schedule.push({ job: j, arrival: cursor, fixed: false });
+    cursor += j.duration || 60;
+  }
+
+  // sort final schedule by arrival time
+  schedule.sort((a, b) => a.arrival - b.arrival);
+
+  for (const s of schedule) {
+    results.push({ id: s.job.id, arrival: toTime(s.arrival) });
   }
 
   return results;
 }
 const arrivalTimes = calcArrivalTimes(routeJobs, dayStartTime);
+const sortedRouteJobs = [...routeJobs].sort((a, b) => {
+  const aTime = arrivalTimes.find(t => t.id === a.id)?.arrival || "99:99";
+  const bTime = arrivalTimes.find(t => t.id === b.id)?.arrival || "99:99";
+  return aTime.localeCompare(bTime);
+});
 
   /* ---------------- METRICS ---------------- */
   const revenue = customers
@@ -341,11 +380,22 @@ const arrivalTimes = calcArrivalTimes(routeJobs, dayStartTime);
       {routeJobs.length === 0 ? (
         <p style={{ opacity: 0.5 }}>No route</p>
       ) : (
-        routeJobs.map((c, i) => (
+        sortedRouteJobs.map((c, i) => (
           <div key={c.id} style={styles.item}>
-            <div style={styles.name}>
-              {i + 1}. {c.name}
-            </div>
+            <div style={{ ...styles.name, display: "flex", alignItems: "center", gap: 8 }}>
+  {i + 1}. {c.name}
+  {c.time && (
+    <span style={{
+      fontSize: 10,
+      padding: "2px 8px",
+      borderRadius: 999,
+      background: "#dbeafe",
+      color: "#1e40af",
+    }}>
+      FIXED {c.time}
+    </span>
+  )}
+</div>
             <div style={styles.sub}>{c.address}</div>
 <div style={{ fontSize: 12, opacity: 0.6 }}>
   🕐 Arrival: {arrivalTimes.find(a => a.id === c.id)?.arrival || "--"}
