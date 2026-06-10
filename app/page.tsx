@@ -386,8 +386,12 @@ function Card({ title, value }: any) {
 
 /* ---------------- STYLES ---------------- */
 const styles: any = {
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  gridTemplateColumns: isMobile
+  ? "1fr"
+  : "repeat(2, minmax(0, 1fr))",
   page: {
-    padding: 24,
+    padding: "clamp(12px, 3vw, 24px)",
     background: "#f4f4f6",
     minHeight: "100vh",
     fontFamily:
@@ -405,11 +409,13 @@ const styles: any = {
   },
 
   tabs: {
-    display: "flex",
-    gap: 10,
-    marginBottom: 18,
-    flexWrap: "wrap",
-  },
+  display: "flex",
+  gap: 10,
+  marginBottom: 18,
+  flexWrap: "nowrap",
+  overflowX: "auto",
+  WebkitOverflowScrolling: "touch",
+},
 
   tab: {
     padding: "8px 14px",
@@ -431,7 +437,7 @@ const styles: any = {
 
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
     gap: 14,
   },
 
@@ -491,9 +497,10 @@ const styles: any = {
 
   item: {
     background: "#fff",
-    borderRadius: 14,
-    padding: 14,
+    padding: "14px 14px 16px",
     marginTop: 10,
+    borderRadius: 14,
+    touchAction: "manipulation",
   },
 
   name: { fontWeight: 600 },
@@ -508,7 +515,8 @@ const styles: any = {
 const weekStyles: any = {
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(7,1fr)",
+    gridTemplateColumns: "repeat(7, minmax(120px, 1fr))",
+    overflowX: "auto",
     gap: 8,
   },
   day: {
