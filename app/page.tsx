@@ -5,6 +5,7 @@ import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 import { supabase } from "../lib/supabase";
 
 type Customer = {
+  id: string;
   name: string;
   phone: string;
   address: string;
@@ -13,7 +14,10 @@ type Customer = {
   completed: boolean;
   services: string[];
   notes: string;
-  location?: { lat: number; lng: number } | null;
+  location?: {
+    lat: number;
+    lng: number;
+  };
 };
 
 export default function Home() {
