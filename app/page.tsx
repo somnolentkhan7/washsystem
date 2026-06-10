@@ -20,6 +20,15 @@ type Customer = {
 };
 
 /* ---------------- PAGE ---------------- */
+const getStartOfWeek = (date = new Date(), offset = 0) => {
+  const start = new Date(date);
+  const day = start.getDay();
+  start.setDate(start.getDate() - day + offset * 7);
+  start.setHours(0, 0, 0, 0);
+  return start;
+};
+
+const getDateKey = (date: Date) => date.toISOString().split("T")[0];
 export default function Home() {
 console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
 console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
@@ -268,12 +277,7 @@ const getDateKey = (date: Date) => {
   return date.toISOString().split("T")[0];
 };
 
-const weekDays = Array.from({ length: 7 }).map((_, i) => {
-  const start = getStartOfWeek();
-  const d = new Date(start);
-  d.setDate(start.getDate() + i);
-  return d;
-});
+
 
 
   /* ---------------- UI ---------------- */
@@ -696,7 +700,8 @@ const styles: any = {
     marginTop: 12,
     flexWrap: "wrap",
   },
-
+};
+  
   const weekStyles: any = {
   grid: {
     display: "grid",
@@ -726,5 +731,4 @@ const styles: any = {
     borderRadius: 10,
     marginBottom: 8,
   },
-};
 };
