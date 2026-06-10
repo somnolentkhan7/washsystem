@@ -75,7 +75,7 @@ const routeJobs = !start
     "all"
   );
 
-  const [weekOffset] = useState(0);
+  const [weekOffset, setWeekOffset] = useState(0);
 
  const [hoverDate, setHoverDate] = useState<string | null>(null);
 
@@ -227,11 +227,15 @@ async function moveCustomerToDate(
 
   /* ---------------- CALENDAR ---------------- */
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
-    const start = new Date();
-    const day = start.getDay();
-    start.setDate(start.getDate() - day + weekOffset * 7 + i);
-    return start;
-  });
+  const d = new Date();
+  const day = d.getDay();
+
+  d.setDate(
+    d.getDate() - day + weekOffset * 7 + i
+  );
+
+  return d;
+});
 
   /* ---------------- METRICS ---------------- */
   const revenue = customers
@@ -499,9 +503,51 @@ async function moveCustomerToDate(
       {tab === "calendar" && (
         <div>
           <div style={styles.card}>
-            <h3>Weekly Calendar</h3>
-            <p style={{ opacity: 0.6 }}>Your weekly schedule</p>
-          </div>
+  <h3>Weekly Calendar</h3>
+
+  <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+    <button
+      onClick={() => setWeekOffset((w) => w - 1)}
+      style={{
+        padding: "6px 12px",
+        borderRadius: 8,
+        border: "1px solid #ddd",
+        background: "#fff",
+        cursor: "pointer",
+      }}
+    >
+      ← Prev Week
+    </button>
+
+    <button
+      onClick={() => setWeekOffset(0)}
+      style={{
+        padding: "6px 12px",
+        borderRadius: 8,
+        border: "1px solid #ddd",
+        background: "#fff",
+        cursor: "pointer",
+      }}
+    >
+      This Week
+    </button>
+
+    <button
+      onClick={() => setWeekOffset((w) => w + 1)}
+      style={{
+        padding: "6px 12px",
+        borderRadius: 8,
+        border: "1px solid #ddd",
+        background: "#fff",
+        cursor: "pointer",
+      }}
+    >
+      Next Week →
+    </button>
+  </div>
+
+  <p style={{ opacity: 0.6, marginTop: 6 }}>Your weekly schedule</p>
+</div>
 
           <div style={weekStyles.grid}>
             {weekDays.map((day, i) => {
