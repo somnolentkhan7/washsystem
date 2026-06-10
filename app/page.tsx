@@ -24,6 +24,11 @@ const getDateKey = (date: Date) => date.toISOString().split("T")[0];
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
+  const [tab, setTab] = useState<
+    "dashboard" | "jobs" | "map" | "calendar"
+  >("dashboard");
+
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const todayKey = getDateKey(new Date());
 
 const todayJobs = customers.filter(
@@ -34,12 +39,6 @@ const routeJobs = [...todayJobs].sort((a, b) => {
   if (!a.lat || !b.lat) return 0;
   return a.lat - b.lat;
 });
-
-  const [tab, setTab] = useState<
-    "dashboard" | "jobs" | "map" | "calendar"
-  >("dashboard");
-
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">(
     "all"
   );
