@@ -372,12 +372,12 @@ function Card({ title, value }: any) {
 
 const styles: any = {
   page: {
-    padding: 28,
+    padding: 20,
     fontFamily:
       "-apple-system, BlinkMacSystemFont, SF Pro Display, SF Pro Text, Inter, sans-serif",
     background: "#f5f5f7",
     minHeight: "100vh",
-    maxWidth: 980,
+    maxWidth: 920,
     margin: "0 auto",
     color: "#1d1d1f",
   },
@@ -390,16 +390,17 @@ const styles: any = {
   },
 
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 600,
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
 
   tabs: {
     display: "flex",
-    gap: 8,
-    marginTop: 12,
+    gap: 10,
+    marginTop: 10,
     marginBottom: 18,
+    flexWrap: "wrap",
   },
 
   tab: {
@@ -409,6 +410,7 @@ const styles: any = {
     background: "rgba(255,255,255,0.7)",
     cursor: "pointer",
     fontSize: 13,
+    transition: "all 0.2s ease",
   },
 
   activeTab: {
@@ -423,76 +425,135 @@ const styles: any = {
 
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: 12,
   },
 
   cardBox: {
-    background: "rgba(255,255,255,0.8)",
+    background: "rgba(255,255,255,0.9)",
+    backdropFilter: "blur(12px)",
     padding: 16,
     borderRadius: 18,
     border: "1px solid rgba(0,0,0,0.06)",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.04)",
   },
 
   cardTitle: {
     fontSize: 12,
     opacity: 0.6,
+    marginBottom: 6,
   },
 
   cardValue: {
     fontSize: 22,
     fontWeight: 600,
+    letterSpacing: -0.3,
   },
 
   card: {
-    background: "white",
+    background: "rgba(255,255,255,0.9)",
+    backdropFilter: "blur(12px)",
     padding: 16,
-    borderRadius: 18,
-    marginTop: 16,
+    borderRadius: 20,
     border: "1px solid rgba(0,0,0,0.06)",
+    marginTop: 16,
+    boxShadow: "0 10px 25px rgba(0,0,0,0.04)",
   },
 
   input: {
     width: "100%",
     padding: 12,
     marginBottom: 10,
-    borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.1)",
+    borderRadius: 14,
+    border: "1px solid rgba(0,0,0,0.08)",
+    background: "rgba(255,255,255,0.8)",
+    fontSize: 14,
+    outline: "none",
   },
 
   textarea: {
     width: "100%",
-    height: 80,
+    height: 90,
     padding: 12,
-    borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.1)",
+    borderRadius: 14,
+    border: "1px solid rgba(0,0,0,0.08)",
+    background: "rgba(255,255,255,0.8)",
+    fontSize: 14,
+    outline: "none",
   },
 
   addBtn: {
     width: "100%",
     padding: 12,
-    marginTop: 10,
+    marginTop: 12,
     background: "#1d1d1f",
     color: "white",
-    borderRadius: 12,
+    borderRadius: 14,
     border: "none",
+    fontWeight: 500,
+    cursor: "pointer",
+  },
+
+  serviceWrap: {
+    display: "flex",
+    gap: 8,
+    flexWrap: "wrap",
+    marginTop: 10,
+  },
+
+  serviceBtn: {
+    padding: "6px 12px",
+    borderRadius: 999,
+    border: "1px solid rgba(0,0,0,0.1)",
+    fontSize: 12,
+    cursor: "pointer",
+  },
+
+  filters: {
+    display: "flex",
+    gap: 8,
+    marginTop: 14,
+    flexWrap: "wrap",
+  },
+
+  filter: {
+    padding: "7px 12px",
+    borderRadius: 999,
+    border: "1px solid rgba(0,0,0,0.08)",
+    background: "rgba(255,255,255,0.7)",
+    fontSize: 12,
+    cursor: "pointer",
+  },
+
+  activeFilter: {
+    padding: "7px 12px",
+    borderRadius: 999,
+    border: "1px solid #1d1d1f",
+    background: "#1d1d1f",
+    color: "white",
+    fontSize: 12,
+    cursor: "pointer",
   },
 
   item: {
-    background: "white",
+    background: "rgba(255,255,255,0.9)",
+    backdropFilter: "blur(12px)",
     padding: 14,
     marginTop: 10,
-    borderRadius: 16,
+    borderRadius: 18,
     border: "1px solid rgba(0,0,0,0.06)",
+    boxShadow: "0 8px 20px rgba(0,0,0,0.03)",
   },
 
   name: {
     fontWeight: 600,
+    fontSize: 15,
   },
 
   sub: {
     opacity: 0.6,
     fontSize: 13,
+    marginTop: 2,
   },
 
   price: {
@@ -503,6 +564,7 @@ const styles: any = {
   row: {
     display: "flex",
     gap: 10,
-    marginTop: 10,
+    marginTop: 12,
+    flexWrap: "wrap",
   },
 };
