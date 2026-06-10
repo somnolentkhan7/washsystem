@@ -40,6 +40,9 @@ function formatMonthLabel(dateStr: string) {
 
 /* ---------------- COMPONENT ---------------- */
 export default function InsightsTab({ customers }: { customers: Customer[] }) {
+    const isMobile =
+  typeof window !== "undefined" &&
+  window.innerWidth < 768;
   const [revenueView, setRevenueView] = useState<"month" | "week">("month");
 
   const completed = useMemo(() => customers.filter((c) => c.completed && c.paid && c.date), [customers]);
@@ -224,7 +227,10 @@ const upsellRate = useMemo(() => {
         {revenueData.length < 2 ? (
           <div style={s.chartEmpty}>Not enough data yet — complete more jobs to see the chart.</div>
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer
+  width="100%"
+  height={isMobile ? 180 : 220}
+>
             <BarChart data={revenueData} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
@@ -244,7 +250,7 @@ const upsellRate = useMemo(() => {
         {avgJobValue.length < 2 ? (
           <div style={s.chartEmpty}>Not enough data yet.</div>
         ) : (
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={isMobile ? 160 : 200}>
             <LineChart data={avgJobValue} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
@@ -265,7 +271,7 @@ const upsellRate = useMemo(() => {
           <div style={s.chartEmpty}>No services recorded yet.</div>
         ) : (
           <>
-            <ResponsiveContainer width="100%" height={180}>
+            <ResponsiveContainer width="100%" height={isMobile ? 150 : 180}>
               <BarChart data={serviceData} layout="vertical" margin={{ top: 0, right: 20, left: 10, bottom: 0 }}>
                 <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                 <YAxis type="category" dataKey="service" tick={{ fontSize: 12 }} width={70} />
@@ -322,11 +328,15 @@ const s: any = {
   emptySub: { opacity: 0.5, fontSize: 14 },
 
   statRow: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-    gap: 12,
-    marginBottom: 16,
-  },
+  display: "grid",
+  gridTemplateColumns:
+    typeof window !== "undefined" &&
+    window.innerWidth < 768
+      ? "1fr 1fr"
+      : "repeat(auto-fit, minmax(140px, 1fr))",
+  gap: 12,
+  marginBottom: 16,
+},
   statBox: {
     background: "#fff",
     borderRadius: 14,
