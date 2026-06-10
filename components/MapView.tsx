@@ -49,40 +49,44 @@ export default function MapView({
   }
 
   /* ---------------- BUILD TODAY ROUTE ---------------- */
-  useEffect(() => {
-    if (!isLoaded) return;
+ useEffect(() => {
+  if (!isLoaded) return;
+  if (typeof window === "undefined") return;
+  if (!window.google) return;
 
-    const todayKey = new Date().toISOString().split("T")[0];
+  const todayKey = new Date().toISOString().split("T")[0];
 
-    const stops = customers.filter(
-      (c) => c.date === todayKey && c.lat && c.lng
-    );
+  const stops = customers.filter(
+    (c) => c.date === todayKey && c.lat && c.lng
+  );
 
-    if (stops.length < 2) return;
+  if (stops.length < 2) return;
 
-    const origin = stops[0];
-    const destination = stops[stops.length - 1];
-    const waypoints = stops.slice(1, -1).map((c) => ({
-      location: { lat: c.lat!, lng: c.lng! },
-      stopover: true,
-    }));
+  const origin = stops[0];
+  const destination = stops[stops.length - 1];
+  const waypoints = stops.slice(1, -1).map((c) => ({
+    location: { lat: c.lat!, lng: c.lng! },
+    stopover: true,
+  }));
 
-    const service = new google.maps.DirectionsService();
+  const service = new google.maps.DirectionsService();
 
-    service.route(
-      {
-        origin: { lat: origin.lat!, lng: origin.lng! },
-        destination: { lat: destination.lat!, lng: destination.lng! },
-        waypoints,
-        travelMode: google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === "OK") {
-          setDirections(result);
-        }
+  service.route(
+    {
+      origin: { lat: origin.lat!, lng: origin.lng! },
+      destination: { lat: destination.lat!, lng: destination.lng! },
+      waypoints,
+      travelMode: google.maps.TravelMode.DRIVING,
+    },
+    (result, status) => {
+      if (status === "OK") {
+        setDirections(result);
+      } else {
+        console.log("Directions error:", status);
       }
-    );
-  }, [customers, isLoaded]);
+    }
+  );
+}, [customers, isLoaded]);
 
   /* ---------------- TOGGLE COMPLETE ---------------- */
   async function toggleComplete(customer: Customer) {
