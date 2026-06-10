@@ -35,10 +35,24 @@ const todayJobs = customers.filter(
   (c) => c.date === todayKey
 );
 
-const routeJobs = [...todayJobs].sort((a, b) => {
-  if (!a.lat || !b.lat) return 0;
-  return a.lat - b.lat;
-});
+const start = todayJobs[0];
+
+const routeJobs = !start
+  ? []
+  : [...todayJobs].sort((a, b) => {
+      const distA = Math.hypot(
+        (a.lat ?? 0) - (start.lat ?? 0),
+        (a.lng ?? 0) - (start.lng ?? 0)
+      );
+
+      const distB = Math.hypot(
+        (b.lat ?? 0) - (start.lat ?? 0),
+        (b.lng ?? 0) - (start.lng ?? 0)
+      );
+
+      return distA - distB;
+    });
+
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">(
     "all"
   );
