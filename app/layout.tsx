@@ -2,9 +2,9 @@ export const metadata = {
   title: 'Strong Washing',
   description: 'Strong Power Washing Services',
   icons: {
-    icon: "/icon.png",
+    icon: "/icon-v2.png",
   },
-  apple: "/apple-touch-icon.png",
+  apple: "/apple-touch-icon-v2.png",
 }
 
 export default function RootLayout({
