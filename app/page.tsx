@@ -35,6 +35,8 @@ export default function Home() {
 
   const [weekOffset] = useState(0);
 
+  const [hoverDate, setHoverDate] = useState("");
+
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -146,6 +148,24 @@ export default function Home() {
 
     loadCustomers();
   }
+
+  /* ---------------- DRAG DROP ---------------- */
+async function moveCustomerToDate(
+  customerId: string,
+  newDate: string
+) {
+  const { error } = await supabase
+    .from("customers")
+    .update({ date: newDate })
+    .eq("id", customerId);
+
+  if (error) {
+    console.log(error);
+    return;
+  }
+
+  loadCustomers();
+}
 
   /* ---------------- SERVICES ---------------- */
   function toggleService(service: string) {
@@ -307,7 +327,17 @@ export default function Home() {
               const jobs = customers.filter((c) => c.date === key);
 
               return (
-                <div key={i} style={weekStyles.day}>
+                <div
+                    key={i}
+                    style={weekStyles.day}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      const customerId =
+                        e.dataTransfer.getData("customerId");
+
+                      moveCustomerToDate(customerId, key);
+                    }}
+                  >
                   <div style={weekStyles.header}>
                     {day.toDateString()}
                   </div>
@@ -316,7 +346,14 @@ export default function Home() {
                     <div style={{ opacity: 0.4 }}>No jobs</div>
                   ) : (
                     jobs.map((c) => (
-                      <div key={c.id} style={weekStyles.job}>
+                      <div
+                       key={c.id}
+                        style={weekStyles.job}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData("customerId", c.id);
+                      }}
+>
                         <div style={{ fontWeight: 600 }}>{c.name}</div>
                         <div style={{ fontSize: 12, opacity: 0.6 }}>
                           {c.address}
