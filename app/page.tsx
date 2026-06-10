@@ -830,9 +830,10 @@ const styles: any = {
   },
   header: { marginBottom: 18 },
   title: { fontSize: 26, fontWeight: 700 },
+
   tabs: {
   display: "flex",
-  gap: 8,
+  gap: 6,
   overflowX: "auto",
   WebkitOverflowScrolling: "touch",
 
@@ -840,35 +841,49 @@ const styles: any = {
   top: 0,
   zIndex: 100,
 
-  background: "rgba(242, 244, 247, 0.9)",
-  backdropFilter: "blur(10px)",
+  padding: "10px 10px",
+  marginBottom: 16,
 
-  padding: "10px 8px",
-  marginBottom: 18,
-  borderRadius: 14,
+  background: "rgba(255,255,255,0.6)",
+  backdropFilter: "blur(14px)",
+  border: "1px solid rgba(0,0,0,0.06)",
+  borderRadius: 16,
+
+  scrollbarWidth: "none",
+  msOverflowStyle: "none",
 },
   tab: {
-  padding: "8px 14px",
+  padding: "8px 12px",
   borderRadius: 999,
-  border: "1px solid rgba(0,0,0,0.08)",
-  background: "#fff",
-  fontSize: 13,
+  fontSize: 12,
   cursor: "pointer",
-  
 
   whiteSpace: "nowrap",
   flexShrink: 0,
+
+  border: "1px solid rgba(0,0,0,0.06)",
+  background: "rgba(255,255,255,0.7)",
+  color: "#444",
+
+  transition: "all 0.15s ease",
 },
   activeTab: {
   padding: "8px 14px",
   borderRadius: 999,
-  background: "#1d1d1f",
-  color: "#fff",
-  fontSize: 13,
+  fontSize: 12,
   cursor: "pointer",
 
   whiteSpace: "nowrap",
   flexShrink: 0,
+
+  border: "1px solid rgba(0,0,0,0.08)",
+  background: "#1d1d1f",
+  color: "#fff",
+
+  boxShadow: "0 6px 18px rgba(0,0,0,0.15)",
+  transform: "scale(1.03)",
+
+  transition: "all 0.15s ease",
 },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14 },
   cardBox: { background: "#fff", borderRadius: 16, padding: 16, border: "1px solid rgba(0,0,0,0.06)" },
