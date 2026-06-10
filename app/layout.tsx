@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Strong Washing",
   description: "Strong Power Washing Services",
   icons: {
     icon: "/icon-v2.png",
     apple: "/apple-touch-icon-v2.png",
+    shortcut: "/favicon.ico",
   },
 };
 
