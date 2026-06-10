@@ -45,6 +45,19 @@ export default function MapView({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
   });
 
+  /* ---------------- CLEAN MAP OPTIONS ---------------- */
+  const mapOptions = useMemo(
+    () => ({
+      clickableIcons: false,
+      disableDefaultUI: true,
+      gestureHandling: "greedy",
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    }),
+    []
+  );
+
   /* ---------------- PIN COLORS ---------------- */
   function getPinColor(c: Customer) {
     if (c.completed) return "green";
@@ -52,28 +65,32 @@ export default function MapView({
     return "red";
   }
 
-  /* ---------------- TODAY JOBS ---------------- */
+  /* ---------------- TODAY ---------------- */
   const todayKey = useMemo(
     () => new Date().toISOString().split("T")[0],
     []
   );
 
   const todayStops = useMemo(() => {
-    return customers
-      .filter((c) => c.date === todayKey && c.lat && c.lng)
-      .slice(); // copy
+    return customers.filter(
+      (c) => c.date === todayKey && c.lat && c.lng
+    );
   }, [customers, todayKey]);
 
-  /* ---------------- SORT (IMPORTANT FOR NUMBERING) ---------------- */
+  /* ---------------- ORDER STOPS ---------------- */
   const orderedStops = useMemo(() => {
     if (todayStops.length === 0) return [];
 
-    const start = START_LOCATION;
-
     return [...todayStops].sort((a, b) => {
-      const distA = Math.hypot((a.lat! - start.lat), (a.lng! - start.lng));
-      const distB = Math.hypot((b.lat! - start.lat), (b.lng! - start.lng));
-      return distA - distB;
+      const aDist = Math.hypot(
+        (a.lat! - START_LOCATION.lat),
+        (a.lng! - START_LOCATION.lng)
+      );
+      const bDist = Math.hypot(
+        (b.lat! - START_LOCATION.lat),
+        (b.lng! - START_LOCATION.lng)
+      );
+      return aDist - bDist;
     });
   }, [todayStops]);
 
@@ -124,6 +141,11 @@ export default function MapView({
     refreshCustomers();
   }
 
+  /* ---------------- CLOSE POPUP ON BACKDROP CLICK ---------------- */
+  function closePopup() {
+    setSelected(null);
+  }
+
   /* ---------------- LOADING ---------------- */
   if (!isLoaded) return <p>Loading map...</p>;
 
@@ -137,6 +159,8 @@ export default function MapView({
           height: "80vh",
           borderRadius: 16,
         }}
+        options={mapOptions}
+        onClick={() => closePopup()}
       >
         {/* ROUTE */}
         {directions && <DirectionsRenderer directions={directions} />}
@@ -150,31 +174,40 @@ export default function MapView({
         />
 
         {/* NUMBERED CUSTOMER PINS */}
-        {orderedStops.map((c, index) => (
-          <Marker
-            key={c.id}
-            position={{ lat: c.lat!, lng: c.lng! }}
-            onClick={() => setSelected(c)}
-            label={{
-              text: String(index + 1),
-              color: "white",
-              fontWeight: "bold",
-            }}
-            icon={{
-              url:
-                getPinColor(c) === "green"
-                  ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
-                  : getPinColor(c) === "orange"
-                  ? "http://maps.google.com/mapfiles/ms/icons/orange-dot.png"
-                  : "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-            }}
-          />
-        ))}
+        {orderedStops.map((c, index) => {
+          const isSelected = selected?.id === c.id;
+
+          return (
+            <Marker
+              key={c.id}
+              position={{ lat: c.lat!, lng: c.lng! }}
+              onClick={() => setSelected(c)}
+              label={{
+                text: String(index + 1),
+                color: "white",
+                fontWeight: "bold",
+              }}
+              icon={{
+                url:
+                  getPinColor(c) === "green"
+                    ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+                    : getPinColor(c) === "orange"
+                    ? "http://maps.google.com/mapfiles/ms/icons/orange-dot.png"
+                    : "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                scaledSize: isSelected
+                  ? new window.google.maps.Size(45, 45)
+                  : new window.google.maps.Size(32, 32),
+              }}
+              opacity={selected && !isSelected ? 0.5 : 1}
+            />
+          );
+        })}
       </GoogleMap>
 
       {/* POPUP */}
       {selected && (
         <div
+          onClick={(e) => e.stopPropagation()}
           style={{
             position: "absolute",
             bottom: 20,
