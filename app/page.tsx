@@ -21,6 +21,10 @@ type Customer = {
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
+  console.log("ENV CHECK:", {
+  supabase: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  maps: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+  });
   const [tab, setTab] = useState<"dashboard" | "jobs" | "map">("dashboard");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">(
