@@ -330,6 +330,15 @@ async function moveCustomerToDate(
             />
 
             <input
+                placeholder="Phone Number"
+                style={styles.input}
+                value={form.phone}
+                onChange={(e) =>
+                  setForm({ ...form, phone: e.target.value })
+                }
+              />
+
+            <input
               placeholder="Address"
               style={styles.input}
               value={form.address}
