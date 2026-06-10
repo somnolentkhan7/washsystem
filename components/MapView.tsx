@@ -1,10 +1,4 @@
 "use client";
-const [selected, setSelected] = useState<Customer | null>(null);
-  const [directions, setDirections] = useState<any>(null);
-
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-  });
 
 import {
   GoogleMap,
@@ -38,10 +32,14 @@ export default function MapView({
   customers: Customer[];
   refreshCustomers: () => void;
 }) {
-  
+  const [selected, setSelected] = useState<Customer | null>(null);
+  const [directions, setDirections] = useState<any>(null);
 
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+  });
 
-  /* ---------------- COLORS ---------------- */
+  /* ---------------- PIN COLOR ---------------- */
   function getPinColor(c: Customer) {
     if (c.completed) return "green";
     if (c.date === new Date().toISOString().split("T")[0]) return "orange";
@@ -49,48 +47,47 @@ export default function MapView({
   }
 
   /* ---------------- BUILD TODAY ROUTE ---------------- */
- useEffect(() => {
-  if (!isLoaded) return;
-  if (typeof window === "undefined") return;
-  if (!window.google?.maps) return;
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!window.google?.maps) return;
 
-  const todayKey = new Date().toISOString().split("T")[0];
+    const todayKey = new Date().toISOString().split("T")[0];
 
-  const stops = customers.filter(
-    (c) => c.date === todayKey && c.lat && c.lng
-  );
+    const stops = customers.filter(
+      (c) => c.date === todayKey && c.lat && c.lng
+    );
 
-  if (stops.length < 2) return;
+    if (stops.length < 2) return;
 
-  const origin = stops[0];
-  const destination = stops[stops.length - 1];
+    const origin = stops[0];
+    const destination = stops[stops.length - 1];
 
-  const waypoints = stops.slice(1, -1).map((c) => ({
-    location: new window.google.maps.LatLng(c.lat!, c.lng!),
-    stopover: true,
-  }));
+    const waypoints = stops.slice(1, -1).map((c) => ({
+      location: new window.google.maps.LatLng(c.lat!, c.lng!),
+      stopover: true,
+    }));
 
-  const service = new window.google.maps.DirectionsService();
+    const service = new window.google.maps.DirectionsService();
 
-  service.route(
-    {
-      origin: new window.google.maps.LatLng(origin.lat!, origin.lng!),
-      destination: new window.google.maps.LatLng(
-        destination.lat!,
-        destination.lng!
-      ),
-      waypoints,
-      travelMode: window.google.maps.TravelMode.DRIVING,
-    },
-    (result, status) => {
-      if (status === "OK" && result) {
-        setDirections(result);
-      } else {
-        console.log("Directions error:", status);
+    service.route(
+      {
+        origin: new window.google.maps.LatLng(origin.lat!, origin.lng!),
+        destination: new window.google.maps.LatLng(
+          destination.lat!,
+          destination.lng!
+        ),
+        waypoints,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === "OK" && result) {
+          setDirections(result);
+        } else {
+          console.log("Directions error:", status);
+        }
       }
-    }
-  );
-}, [customers, isLoaded]);
+    );
+  }, [customers, isLoaded]);
 
   /* ---------------- TOGGLE COMPLETE ---------------- */
   async function toggleComplete(customer: Customer) {
@@ -103,12 +100,13 @@ export default function MapView({
     refreshCustomers();
   }
 
+  /* ---------------- LOADING ---------------- */
+  if (!isLoaded) {
+    return <p>Loading map...</p>;
+  }
+
   return (
-    return (
-  <div style={{ position: "relative" }}>
-    {!isLoaded ? (
-      <p>Loading map...</p>
-    ) : (
+    <div style={{ position: "relative" }}>
       <GoogleMap
         zoom={12}
         center={{
@@ -121,10 +119,12 @@ export default function MapView({
           borderRadius: 16,
         }}
       >
-        {/* ---------------- REAL DRIVING ROUTE ---------------- */}
-        {directions && <DirectionsRenderer directions={directions} />}
+        {/* ROUTE LINE */}
+        {directions && (
+          <DirectionsRenderer directions={directions} />
+        )}
 
-        {/* ---------------- PINS ---------------- */}
+        {/* MARKERS */}
         {customers
           .filter((c) => c.lat && c.lng)
           .map((c) => (
@@ -144,7 +144,7 @@ export default function MapView({
           ))}
       </GoogleMap>
 
-      {/* ---------------- POPUP ---------------- */}
+      {/* POPUP */}
       {selected && (
         <div
           style={{
@@ -157,8 +157,11 @@ export default function MapView({
             borderRadius: 18,
             padding: 16,
             boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+            fontFamily:
+              "-apple-system, BlinkMacSystemFont, Inter, sans-serif",
           }}
         >
+          {/* HEADER */}
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontWeight: 700 }}>{selected.name}</div>
@@ -180,13 +183,17 @@ export default function MapView({
             </div>
           </div>
 
+          {/* INFO */}
           <div style={{ marginTop: 12, fontSize: 13 }}>
-            <div>📞 {selected.phone}</div>
+            <div>📞 {selected.phone || "No phone"}</div>
             <div>🧼 {selected.services?.join(", ")}</div>
             <div>💵 ${selected.price}</div>
-            {selected.notes && <div>📝 {selected.notes}</div>}
+            {selected.notes && (
+              <div style={{ opacity: 0.7 }}>📝 {selected.notes}</div>
+            )}
           </div>
 
+          {/* BUTTON */}
           <button
             onClick={() => toggleComplete(selected)}
             style={{
@@ -197,9 +204,12 @@ export default function MapView({
               border: "none",
               background: selected.completed ? "#999" : "#1d1d1f",
               color: "#fff",
+              cursor: "pointer",
             }}
           >
-            {selected.completed ? "Mark Incomplete" : "Mark Complete"}
+            {selected.completed
+              ? "Mark Incomplete"
+              : "Mark Complete"}
           </button>
         </div>
       )}
