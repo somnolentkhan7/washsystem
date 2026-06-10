@@ -24,6 +24,17 @@ const getDateKey = (date: Date) => date.toISOString().split("T")[0];
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
+  const todayKey = getDateKey(new Date());
+
+const todayJobs = customers.filter(
+  (c) => c.date === todayKey
+);
+
+const routeJobs = [...todayJobs].sort((a, b) => {
+  if (!a.lat || !b.lat) return 0;
+  return a.lat - b.lat;
+});
+
   const [tab, setTab] = useState<
     "dashboard" | "jobs" | "map" | "calendar"
   >("dashboard");
@@ -213,25 +224,10 @@ async function moveCustomerToDate(
         ))}
       </div>
 
-      {/* DASHBOARD */}
-
-      
-      {tab === "dashboard" && (
-        const todayKey = getDateKey(new Date());
-
-const todayJobs = customers.filter(
-  (c) => c.date === todayKey
-);
-
-function getRoute(jobs: Customer[]) {
-  return [...jobs].sort((a, b) => {
-    if (!a.lat || !b.lat) return 0;
-    return a.lat - b.lat;
-  });
-}
-
-const routeJobs = getRoute(todayJobs);
+   {/* DASHBOARD */}
+{tab === "dashboard" && (
   <>
+    {/* TODAY JOBS */}
     <div style={styles.card}>
       <h3>Today’s Jobs</h3>
 
@@ -247,6 +243,7 @@ const routeJobs = getRoute(todayJobs);
       )}
     </div>
 
+    {/* ROUTE ORDER */}
     <div style={styles.card}>
       <h3>Route Order</h3>
 
@@ -264,6 +261,7 @@ const routeJobs = getRoute(todayJobs);
       )}
     </div>
 
+    {/* METRICS */}
     <div style={styles.grid}>
       <Card title="Total Jobs" value={customers.length} />
       <Card title="Completed" value={completed} />
@@ -272,7 +270,6 @@ const routeJobs = getRoute(todayJobs);
     </div>
   </>
 )}
-
       {/* JOBS */}
       {tab === "jobs" && (
         <div>
