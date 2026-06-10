@@ -18,6 +18,7 @@ type Customer = {
   lat?: number;
   lng?: number;
   time?: string;
+  duration?: number;
 };
 
 /* ---------------- HELPERS ---------------- */
@@ -68,6 +69,7 @@ const routeJobs = [...todayJobs].sort((a, b) =>
   const [weekOffset, setWeekOffset] = useState(0);
 
  const [hoverDate, setHoverDate] = useState<string | null>(null);
+ const [dayStartTime, setDayStartTime] = useState<string>("08:00");
 
   const [form, setForm] = useState({
     name: "",
@@ -224,6 +226,23 @@ const monthDays = Array.from({ length: 35 }).map((_, i) => {
   d.setDate(1 - firstDayOfWeek + i); // start from that Sunday
   return d;
 });
+/* ---------------- SCHEDULE ---------------- */
+function calcArrivalTimes(jobs: Customer[], startTime: string) {
+  const results: { id: string; arrival: string }[] = [];
+  const [startHour, startMin] = startTime.split(":").map(Number);
+  let totalMins = startHour * 60 + startMin;
+
+  for (const job of jobs) {
+    const hours = Math.floor(totalMins / 60) % 24;
+    const mins = totalMins % 60;
+    const arrival = `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+    results.push({ id: job.id, arrival });
+    totalMins += job.duration || 60; // default 60 mins if no duration set
+  }
+
+  return results;
+}
+const arrivalTimes = calcArrivalTimes(routeJobs, dayStartTime);
 
   /* ---------------- METRICS ---------------- */
   const revenue = customers
@@ -306,7 +325,18 @@ const monthDays = Array.from({ length: 35 }).map((_, i) => {
 
     {/* ROUTE ORDER */}
     <div style={styles.card}>
-      <h3>Route Order</h3>
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <h3 style={{ margin: 0 }}>Route Order</h3>
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <span style={{ fontSize: 12, opacity: 0.6 }}>Start time:</span>
+      <input
+        type="time"
+        value={dayStartTime}
+        onChange={(e) => setDayStartTime(e.target.value)}
+        style={{ padding: "4px 8px", borderRadius: 8, border: "1px solid #ddd", fontSize: 12 }}
+      />
+    </div>
+  </div>
 
       {routeJobs.length === 0 ? (
         <p style={{ opacity: 0.5 }}>No route</p>
@@ -317,6 +347,10 @@ const monthDays = Array.from({ length: 35 }).map((_, i) => {
               {i + 1}. {c.name}
             </div>
             <div style={styles.sub}>{c.address}</div>
+<div style={{ fontSize: 12, opacity: 0.6 }}>
+  🕐 Arrival: {arrivalTimes.find(a => a.id === c.id)?.arrival || "--"}
+  {c.duration ? ` · ${c.duration} mins` : " · ~60 mins (default)"}
+</div>
           </div>
         ))
       )}
@@ -760,6 +794,21 @@ const monthDays = Array.from({ length: 35 }).map((_, i) => {
       loadCustomers();
     }}
     style={{ marginLeft: 8, padding: "4px 8px", borderRadius: 8, border: "1px solid #ddd" }}
+  />
+</div>
+<div style={{ marginTop: 10 }}>
+  <strong>⏱ Duration (mins):</strong>
+  <input
+    type="number"
+    defaultValue={selectedCustomer.duration || ""}
+    onChange={async (e) => {
+      await supabase
+        .from("customers")
+        .update({ duration: Number(e.target.value) })
+        .eq("id", selectedCustomer.id);
+      loadCustomers();
+    }}
+    style={{ marginLeft: 8, padding: "4px 8px", borderRadius: 8, border: "1px solid #ddd", width: 70 }}
   />
 </div>
 </div>
