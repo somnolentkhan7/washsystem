@@ -928,6 +928,25 @@ sub: {
   row: { display: "flex", gap: 10, marginTop: 10 },
 };
 
+const calBtn = {
+  padding: "6px 12px",
+  borderRadius: 10,
+  border: "1px solid #e5e7eb",
+  background: "#fff",
+  fontSize: 12,
+  cursor: "pointer",
+};
+
+const calBtnPrimary = {
+  padding: "6px 12px",
+  borderRadius: 10,
+  border: "1px solid #111",
+  background: "#111",
+  color: "#fff",
+  fontSize: 12,
+  cursor: "pointer",
+};
+
 const weekStyles: any = {
   grid: {
     display: "grid",
