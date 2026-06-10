@@ -3,10 +3,10 @@
 import {
   GoogleMap,
   Marker,
-  Polyline,
+  DirectionsRenderer,
   useLoadScript,
 } from "@react-google-maps/api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 /* ---------------- TYPES ---------------- */
@@ -33,6 +33,7 @@ export default function MapView({
   refreshCustomers: () => void;
 }) {
   const [selected, setSelected] = useState<Customer | null>(null);
+  const [directions, setDirections] = useState<any>(null);
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
@@ -40,31 +41,55 @@ export default function MapView({
 
   if (!isLoaded) return <p>Loading map...</p>;
 
-  /* ---------------- PIN COLORS ---------------- */
+  /* ---------------- COLORS ---------------- */
   function getPinColor(c: Customer) {
     if (c.completed) return "green";
     if (c.date === new Date().toISOString().split("T")[0]) return "orange";
     return "red";
   }
 
-  /* ---------------- TODAY ROUTE LINE ---------------- */
-  const todayKey = new Date().toISOString().split("T")[0];
+  /* ---------------- BUILD TODAY ROUTE ---------------- */
+  useEffect(() => {
+    if (!isLoaded) return;
 
-  const todayRoute = customers
-    .filter((c) => c.date === todayKey && c.lat && c.lng)
-    .map((c) => ({ lat: c.lat!, lng: c.lng! }));
+    const todayKey = new Date().toISOString().split("T")[0];
+
+    const stops = customers.filter(
+      (c) => c.date === todayKey && c.lat && c.lng
+    );
+
+    if (stops.length < 2) return;
+
+    const origin = stops[0];
+    const destination = stops[stops.length - 1];
+    const waypoints = stops.slice(1, -1).map((c) => ({
+      location: { lat: c.lat!, lng: c.lng! },
+      stopover: true,
+    }));
+
+    const service = new google.maps.DirectionsService();
+
+    service.route(
+      {
+        origin: { lat: origin.lat!, lng: origin.lng! },
+        destination: { lat: destination.lat!, lng: destination.lng! },
+        waypoints,
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === "OK") {
+          setDirections(result);
+        }
+      }
+    );
+  }, [customers, isLoaded]);
 
   /* ---------------- TOGGLE COMPLETE ---------------- */
   async function toggleComplete(customer: Customer) {
-    const { error } = await supabase
+    await supabase
       .from("customers")
       .update({ completed: !customer.completed })
       .eq("id", customer.id);
-
-    if (error) {
-      console.log(error);
-      return;
-    }
 
     setSelected(null);
     refreshCustomers();
@@ -84,15 +109,8 @@ export default function MapView({
           borderRadius: 16,
         }}
       >
-        {/* ---------------- ROUTE LINE (TODAY) ---------------- */}
-        <Polyline
-          path={todayRoute}
-          options={{
-            strokeColor: "#1d1d1f",
-            strokeOpacity: 0.8,
-            strokeWeight: 4,
-          }}
-        />
+        {/* ---------------- REAL DRIVING ROUTE ---------------- */}
+        {directions && <DirectionsRenderer directions={directions} />}
 
         {/* ---------------- PINS ---------------- */}
         {customers
@@ -127,16 +145,11 @@ export default function MapView({
             borderRadius: 18,
             padding: 16,
             boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-            fontFamily:
-              "-apple-system, BlinkMacSystemFont, Inter, sans-serif",
           }}
         >
-          {/* HEADER */}
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700 }}>
-                {selected.name}
-              </div>
+              <div style={{ fontWeight: 700 }}>{selected.name}</div>
               <div style={{ fontSize: 12, opacity: 0.6 }}>
                 {selected.address}
               </div>
@@ -155,54 +168,27 @@ export default function MapView({
             </div>
           </div>
 
-          {/* INFO */}
-          <div style={{ marginTop: 12, fontSize: 13, opacity: 0.85 }}>
-            <div>📞 {selected.phone || "No phone"}</div>
-            <div>
-              🧼{" "}
-              {selected.services?.length
-                ? selected.services.join(", ")
-                : "No services"}
-            </div>
+          <div style={{ marginTop: 12, fontSize: 13 }}>
+            <div>📞 {selected.phone}</div>
+            <div>🧼 {selected.services?.join(", ")}</div>
             <div>💵 ${selected.price}</div>
-
-            {selected.notes && (
-              <div style={{ marginTop: 6, opacity: 0.6 }}>
-                📝 {selected.notes}
-              </div>
-            )}
+            {selected.notes && <div>📝 {selected.notes}</div>}
           </div>
 
-          {/* BUTTONS */}
-          <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-            <button
-              onClick={() => toggleComplete(selected)}
-              style={{
-                flex: 1,
-                padding: 10,
-                borderRadius: 10,
-                border: "none",
-                background: selected.completed ? "#999" : "#1d1d1f",
-                color: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              {selected.completed ? "Mark Incomplete" : "Mark Complete"}
-            </button>
-
-            <button
-              onClick={() => setSelected(null)}
-              style={{
-                padding: 10,
-                borderRadius: 10,
-                border: "1px solid #ddd",
-                background: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              Close
-            </button>
-          </div>
+          <button
+            onClick={() => toggleComplete(selected)}
+            style={{
+              marginTop: 12,
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "none",
+              background: selected.completed ? "#999" : "#1d1d1f",
+              color: "#fff",
+            }}
+          >
+            {selected.completed ? "Mark Incomplete" : "Mark Complete"}
+          </button>
         </div>
       )}
     </div>
