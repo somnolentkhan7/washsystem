@@ -19,7 +19,9 @@ type Customer = {
   lng?: number;
 };
 
-/* ---------------- PAGE ---------------- */
+/* ---------------- HELPERS ---------------- */
+const getDateKey = (date: Date) => date.toISOString().split("T")[0];
+
 const getStartOfWeek = (date = new Date(), offset = 0) => {
   const start = new Date(date);
   const day = start.getDay();
@@ -28,61 +30,18 @@ const getStartOfWeek = (date = new Date(), offset = 0) => {
   return start;
 };
 
-const getDateKey = (date: Date) => date.toISOString().split("T")[0];
+/* ---------------- PAGE ---------------- */
 export default function Home() {
-console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const [tab, setTab] = useState<
+    "dashboard" | "jobs" | "map" | "calendar"
+  >("dashboard");
 
-  const [directions, setDirections] = useState<any>(null);
-  const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar">("dashboard");
-  const [weekOffset, setWeekOffset] = useState(0);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">(
     "all"
   );
-  const [routeMode] = useState(false);
 
-async function getOptimizedRoute(customers: Customer[]) {
-  if (typeof window === "undefined") return null;
-  if (!window.google?.maps) return null;
-
-  const stops = customers.filter((c) => c.lat && c.lng);
-  if (stops.length === 0) return null;
-
-  const service = new window.google.maps.DirectionsService();
-
-  return new Promise((resolve, reject) => {
-    service.route(
-      {
-        origin: "Austin, TX",
-        destination: "Austin, TX",
-        travelMode: window.google.maps.TravelMode.DRIVING,
-        optimizeWaypoints: true,
-        waypoints: stops.map((c) => ({
-          location: { lat: c.lat!, lng: c.lng! },
-          stopover: true,
-        })),
-      },
-      (result, status) => {
-        if (status === "OK") resolve(result);
-        else reject(status);
-      }
-    );
-  });
-}
-
-useEffect(() => {
-  if (!routeMode) return;
-
-  (async () => {
-    try {
-      const result = await getOptimizedRoute(customers);
-      setDirections(result);
-    } catch (err) {
-      console.log("Route error:", err);
-    }
-  })();
-}, [routeMode, customers]);
+  const [weekOffset] = useState(0);
 
   const [form, setForm] = useState({
     name: "",
@@ -93,12 +52,6 @@ useEffect(() => {
     notes: "",
     services: [] as string[],
   });
-
-  console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-  console.log("GOOGLE KEY:", process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
-
-
-
 
   /* ---------------- LOAD ---------------- */
   async function loadCustomers() {
@@ -136,54 +89,47 @@ useEffect(() => {
   };
 
   /* ---------------- ADD ---------------- */
- async function addCustomer() {
-  console.log("INSERT START");
-  console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-  console.log("KEY EXISTS:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  if (!form.name || !form.address) return;
+  async function addCustomer() {
+    if (!form.name || !form.address) return;
 
-  try {
-    const coords = await geocodeAddress(form.address);
+    try {
+      const coords = await geocodeAddress(form.address);
 
-    console.log("GEOCODE RESULT:", coords);
+      const { error } = await supabase.from("customers").insert([
+        {
+          name: form.name,
+          phone: form.phone,
+          address: form.address,
+          price: Number(form.price || 0),
+          date: form.date,
+          completed: false,
+          services: form.services,
+          notes: form.notes,
+          lat: coords?.lat ?? null,
+          lng: coords?.lng ?? null,
+        },
+      ]);
 
-    const { data, error } = await supabase.from("customers").insert([
-      {
-        name: form.name,
-        phone: form.phone,
-        address: form.address,
-        price: Number(form.price || 0),
-        date: form.date,
-        completed: false,
-        services: form.services,
-        notes: form.notes,
-        lat: coords?.lat ?? null,
-        lng: coords?.lng ?? null,
-      },
-    ]);
+      if (error) {
+        alert(error.message);
+        return;
+      }
 
-    console.log("SUPABASE RESPONSE:", { data, error });
+      loadCustomers();
 
-    if (error) {
-      alert(error.message);
-      return;
+      setForm({
+        name: "",
+        phone: "",
+        address: "",
+        price: "",
+        date: "",
+        notes: "",
+        services: [],
+      });
+    } catch (err) {
+      console.log(err);
     }
-
-    loadCustomers();
-
-    setForm({
-      name: "",
-      phone: "",
-      address: "",
-      price: "",
-      date: "",
-      notes: "",
-      services: [],
-    });
-  } catch (err) {
-    console.log("ADD CUSTOMER ERROR:", err);
   }
-}
 
   /* ---------------- UPDATE ---------------- */
   async function toggleComplete(customer: Customer) {
@@ -192,10 +138,7 @@ useEffect(() => {
       .update({ completed: !customer.completed })
       .eq("id", customer.id);
 
-    if (error) {
-      console.log(error);
-      return;
-    }
+    if (error) return console.log(error);
 
     loadCustomers();
   }
@@ -207,10 +150,7 @@ useEffect(() => {
       .delete()
       .eq("id", id);
 
-    if (error) {
-      console.log(error);
-      return;
-    }
+    if (error) return console.log(error);
 
     loadCustomers();
   }
@@ -225,60 +165,21 @@ useEffect(() => {
     }));
   }
 
+  /* ---------------- WEEK CALENDAR ---------------- */
+  const weekDays = Array.from({ length: 7 }).map((_, i) => {
+    const start = getStartOfWeek(new Date(), weekOffset);
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    return d;
+  });
 
   /* ---------------- METRICS ---------------- */
-  const getStartOfWeek = (date = new Date(), offset = 0) => {
-  const start = new Date(date);
-  const day = start.getDay();
-
-  const diff = start.getDate() - day + offset * 7;
-  start.setDate(diff);
-  start.setHours(0, 0, 0, 0);
-
-  return start;
-};
-
-const getDateKey = (date: Date) => {
-  return date.toISOString().split("T")[0];
-};
-
-const weekDays = Array.from({ length: 7 }).map((_, i) => {
-  const start = getStartOfWeek(new Date(), weekOffset);
-  const d = new Date(start);
-  d.setDate(start.getDate() + i);
-  return d;
-});
-
-const groupedByDate = customers.reduce((acc: any, customer) => {
-  if (!customer.date) return acc;
-
-  const date = customer.date;
-
-  if (!acc[date]) acc[date] = [];
-  acc[date].push(customer);
-
-  return acc;
-}, {});
-
   const revenue = customers
     .filter((c) => c.completed)
     .reduce((sum, c) => sum + c.price, 0);
+
   const completed = customers.filter((c) => c.completed).length;
   const pending = customers.length - completed;
-  const getStartOfWeek = (date = new Date()) => {
-  const start = new Date(date);
-  const day = start.getDay(); // 0 = Sunday
-  start.setDate(start.getDate() - day);
-  start.setHours(0, 0, 0, 0);
-  return start;
-};
-
-const getDateKey = (date: Date) => {
-  return date.toISOString().split("T")[0];
-};
-
-
-
 
   /* ---------------- UI ---------------- */
   return (
@@ -353,37 +254,6 @@ const getDateKey = (date: Date) => {
               }
             />
 
-            <div style={styles.serviceWrap}>
-              {["Driveway", "Sidewalks", "Trash", "Patio"].map(
-                (s) => (
-                  <button
-                    key={s}
-                    onClick={() => toggleService(s)}
-                    style={{
-                      ...styles.serviceBtn,
-                      background: form.services.includes(s)
-                        ? "#111"
-                        : "#eee",
-                      color: form.services.includes(s)
-                        ? "white"
-                        : "black",
-                    }}
-                  >
-                    {s}
-                  </button>
-                )
-              )}
-            </div>
-
-            <textarea
-              placeholder="Notes"
-              style={styles.textarea}
-              value={form.notes}
-              onChange={(e) =>
-                setForm({ ...form, notes: e.target.value })
-              }
-            />
-
             <button style={styles.addBtn} onClick={addCustomer}>
               Add Job
             </button>
@@ -422,7 +292,6 @@ const getDateKey = (date: Date) => {
                   <button onClick={() => toggleComplete(c)}>
                     {c.completed ? "Undo" : "Complete"}
                   </button>
-
                   <button onClick={() => deleteCustomer(c.id)}>
                     Delete
                   </button>
@@ -431,61 +300,45 @@ const getDateKey = (date: Date) => {
             ))}
         </div>
       )}
+
       {/* CALENDAR */}
-{tab === "calendar" && (
-  <div>
-    <div style={styles.card}>
-      <h3>Weekly Calendar</h3>
-      <p style={{ opacity: 0.6 }}>
-        Your scheduled jobs for this week
-      </p>
-    </div>
-
-    <div style={weekStyles.grid}>
-      {weekDays.map((day, i) => {
-        const key = getDateKey(day);
-
-        const jobsForDay = customers.filter(
-          (c) => c.date === key
-        );
-
-        return (
-          <div key={i} style={weekStyles.day}>
-            <div style={weekStyles.header}>
-              {day.toLocaleDateString("en-US", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-              })}
-            </div>
-
-            {jobsForDay.length === 0 ? (
-              <div style={{ opacity: 0.4 }}>No jobs</div>
-            ) : (
-              jobsForDay.map((c) => (
-                <div key={c.id} style={weekStyles.job}>
-                  <div style={{ fontWeight: 600 }}>{c.name}</div>
-                  <div style={{ fontSize: 12, opacity: 0.6 }}>
-                    {c.address}
-                  </div>
-                  <div style={{ fontSize: 12 }}>
-                    ${c.price}
-                  </div>
-
-                  <div style={{ marginTop: 5 }}>
-                    <button onClick={() => toggleComplete(c)}>
-                      {c.completed ? "Undo" : "Complete"}
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+      {tab === "calendar" && (
+        <div>
+          <div style={styles.card}>
+            <h3>Weekly Calendar</h3>
+            <p style={{ opacity: 0.6 }}>Your weekly schedule</p>
           </div>
-        );
-      })}
-    </div>
-  </div>
-)}
+
+          <div style={weekStyles.grid}>
+            {weekDays.map((day, i) => {
+              const key = getDateKey(day);
+
+              const jobs = customers.filter((c) => c.date === key);
+
+              return (
+                <div key={i} style={weekStyles.day}>
+                  <div style={weekStyles.header}>
+                    {day.toDateString()}
+                  </div>
+
+                  {jobs.length === 0 ? (
+                    <div style={{ opacity: 0.4 }}>No jobs</div>
+                  ) : (
+                    jobs.map((c) => (
+                      <div key={c.id} style={weekStyles.job}>
+                        <div style={{ fontWeight: 600 }}>{c.name}</div>
+                        <div style={{ fontSize: 12, opacity: 0.6 }}>
+                          {c.address}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* MAP */}
       {tab === "map" && <MapView customers={customers} />}
@@ -503,232 +356,52 @@ function Card({ title, value }: any) {
   );
 }
 
+/* ---------------- STYLES ---------------- */
 const styles: any = {
-  page: {
-    padding: 20,
-    fontFamily:
-      "-apple-system, BlinkMacSystemFont, SF Pro Display, SF Pro Text, Inter, sans-serif",
-    background: "#f5f5f7",
-    minHeight: "100vh",
-    maxWidth: 920,
-    margin: "0 auto",
-    color: "#1d1d1f",
-  },
-
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 18,
-  },
-
-  title: {
-    fontSize: 24,
-    fontWeight: 600,
-    letterSpacing: -0.4,
-  },
-
-  tabs: {
-    display: "flex",
-    gap: 10,
-    marginTop: 10,
-    marginBottom: 18,
-    flexWrap: "wrap",
-  },
-
-  tab: {
-    padding: "8px 14px",
-    borderRadius: 999,
-    border: "1px solid rgba(0,0,0,0.08)",
-    background: "rgba(255,255,255,0.7)",
-    cursor: "pointer",
-    fontSize: 13,
-    transition: "all 0.2s ease",
-  },
-
-  activeTab: {
-    padding: "8px 14px",
-    borderRadius: 999,
-    border: "1px solid rgba(0,0,0,0.12)",
-    background: "#1d1d1f",
-    color: "white",
-    cursor: "pointer",
-    fontSize: 13,
-  },
-
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 12,
-  },
-
-  cardBox: {
-    background: "rgba(255,255,255,0.9)",
-    backdropFilter: "blur(12px)",
-    padding: 16,
-    borderRadius: 18,
-    border: "1px solid rgba(0,0,0,0.06)",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.04)",
-  },
-
-  cardTitle: {
-    fontSize: 12,
-    opacity: 0.6,
-    marginBottom: 6,
-  },
-
-  cardValue: {
-    fontSize: 22,
-    fontWeight: 600,
-    letterSpacing: -0.3,
-  },
-
-  card: {
-    background: "rgba(255,255,255,0.9)",
-    backdropFilter: "blur(12px)",
-    padding: 16,
-    borderRadius: 20,
-    border: "1px solid rgba(0,0,0,0.06)",
-    marginTop: 16,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.04)",
-  },
-
-  input: {
-    width: "100%",
-    padding: 12,
-    marginBottom: 10,
-    borderRadius: 14,
-    border: "1px solid rgba(0,0,0,0.08)",
-    background: "rgba(255,255,255,0.8)",
-    fontSize: 14,
-    outline: "none",
-  },
-
-  textarea: {
-    width: "100%",
-    height: 90,
-    padding: 12,
-    borderRadius: 14,
-    border: "1px solid rgba(0,0,0,0.08)",
-    background: "rgba(255,255,255,0.8)",
-    fontSize: 14,
-    outline: "none",
-  },
-
-  addBtn: {
-    width: "100%",
-    padding: 12,
-    marginTop: 12,
-    background: "#1d1d1f",
-    color: "white",
-    borderRadius: 14,
-    border: "none",
-    fontWeight: 500,
-    cursor: "pointer",
-  },
-
-  serviceWrap: {
-    display: "flex",
-    gap: 8,
-    flexWrap: "wrap",
-    marginTop: 10,
-  },
-
-  serviceBtn: {
-    padding: "6px 12px",
-    borderRadius: 999,
-    border: "1px solid rgba(0,0,0,0.1)",
-    fontSize: 12,
-    cursor: "pointer",
-  },
-
-  filters: {
-    display: "flex",
-    gap: 8,
-    marginTop: 14,
-    flexWrap: "wrap",
-  },
-
-  filter: {
-    padding: "7px 12px",
-    borderRadius: 999,
-    border: "1px solid rgba(0,0,0,0.08)",
-    background: "rgba(255,255,255,0.7)",
-    fontSize: 12,
-    cursor: "pointer",
-  },
-
-  activeFilter: {
-    padding: "7px 12px",
-    borderRadius: 999,
-    border: "1px solid #1d1d1f",
-    background: "#1d1d1f",
-    color: "white",
-    fontSize: 12,
-    cursor: "pointer",
-  },
-
-  item: {
-    background: "rgba(255,255,255,0.9)",
-    backdropFilter: "blur(12px)",
-    padding: 14,
-    marginTop: 10,
-    borderRadius: 18,
-    border: "1px solid rgba(0,0,0,0.06)",
-    boxShadow: "0 8px 20px rgba(0,0,0,0.03)",
-  },
-
-  name: {
-    fontWeight: 600,
-    fontSize: 15,
-  },
-
-  sub: {
-    opacity: 0.6,
-    fontSize: 13,
-    marginTop: 2,
-  },
-
-  price: {
-    marginTop: 6,
-    fontWeight: 600,
-  },
-
-  row: {
-    display: "flex",
-    gap: 10,
-    marginTop: 12,
-    flexWrap: "wrap",
-  },
+  page: { padding: 20, background: "#f5f5f7", minHeight: "100vh" },
+  header: { marginBottom: 18 },
+  title: { fontSize: 24, fontWeight: 600 },
+  tabs: { display: "flex", gap: 10, marginBottom: 18 },
+  tab: { padding: 8, borderRadius: 10, background: "#eee" },
+  activeTab: { padding: 8, borderRadius: 10, background: "#000", color: "#fff" },
+  grid: { display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 },
+  cardBox: { padding: 16, background: "#fff", borderRadius: 12 },
+  cardTitle: { fontSize: 12 },
+  cardValue: { fontSize: 20, fontWeight: 600 },
+  card: { padding: 16, background: "#fff", borderRadius: 12, marginBottom: 12 },
+  input: { width: "100%", padding: 10, marginBottom: 8 },
+  addBtn: { padding: 10, background: "#000", color: "#fff", width: "100%" },
+  filters: { display: "flex", gap: 10, marginBottom: 10 },
+  filter: { padding: 6, background: "#eee" },
+  activeFilter: { padding: 6, background: "#000", color: "#fff" },
+  item: { padding: 12, background: "#fff", marginBottom: 8 },
+  name: { fontWeight: 600 },
+  sub: { opacity: 0.6 },
+  price: { marginTop: 4 },
+  row: { display: "flex", gap: 10, marginTop: 8 },
 };
-  
-  const weekStyles: any = {
+
+const weekStyles: any = {
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(7, 1fr)",
-    gap: 10,
-    marginTop: 20,
+    gridTemplateColumns: "repeat(7,1fr)",
+    gap: 8,
   },
-
   day: {
-    background: "rgba(255,255,255,0.9)",
-    border: "1px solid rgba(0,0,0,0.06)",
-    borderRadius: 16,
+    background: "#fff",
     padding: 10,
-    minHeight: 220,
-  },
-
-  header: {
-    fontWeight: 600,
-    fontSize: 12,
-    marginBottom: 10,
-    opacity: 0.7,
-  },
-
-  job: {
-    background: "#f5f5f7",
-    padding: 8,
     borderRadius: 10,
+    minHeight: 180,
+  },
+  header: {
+    fontSize: 12,
+    fontWeight: 600,
     marginBottom: 8,
+  },
+  job: {
+    background: "#f5f5f5",
+    padding: 6,
+    borderRadius: 8,
+    marginBottom: 6,
   },
 };
