@@ -326,6 +326,38 @@ async function moveCustomerToDate(
               }
             />
 
+            <div style={{ marginTop: 10 }}>
+  <p style={{ fontSize: 12, opacity: 0.6 }}>Services</p>
+
+  {["Driveway", "Sidewalk", "Patio", "Trashcans"].map((service) => (
+    <button
+      key={service}
+      onClick={() => {
+        setForm((prev) => ({
+          ...prev,
+          services: prev.services.includes(service)
+            ? prev.services.filter((s) => s !== service)
+            : [...prev.services, service],
+        }));
+      }}
+      style={{
+        marginRight: 8,
+        marginBottom: 8,
+        padding: "6px 10px",
+        borderRadius: 999,
+        border: "1px solid #ddd",
+        background: form.services.includes(service)
+          ? "#1d1d1f"
+          : "#fff",
+        color: form.services.includes(service) ? "#fff" : "#000",
+        fontSize: 12,
+      }}
+    >
+      {service}
+    </button>
+  ))}
+</div>
+
             <button style={styles.addBtn} onClick={addCustomer}>
               Add Job
             </button>
