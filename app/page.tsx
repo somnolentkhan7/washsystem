@@ -37,6 +37,8 @@ export default function Home() {
 
   const [hoverDate, setHoverDate] = useState("");
 
+  const [hoverDate, setHoverDate] = useState<string | null>(null);
+
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -329,13 +331,20 @@ async function moveCustomerToDate(
               return (
                 <div
                     key={i}
-                    style={weekStyles.day}
-                    onDragOver={(e) => e.preventDefault()}
+                    style={{
+                      ...weekStyles.day,
+                      background: hoverDate === key ? "#dbeafe" : "#fff",
+                      transition: "0.2s ease",
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault(); // REQUIRED or drop won't work
+                      setHoverDate(key);   // triggers blue highlight
+                    }}
+                    onDragLeave={() => setHoverDate(null)}
                     onDrop={(e) => {
-                      const customerId =
-                        e.dataTransfer.getData("customerId");
-
+                      const customerId = e.dataTransfer.getData("customerId");
                       moveCustomerToDate(customerId, key);
+                      setHoverDate(null);
                     }}
                   >
                   <div style={weekStyles.header}>
@@ -347,13 +356,16 @@ async function moveCustomerToDate(
                   ) : (
                     jobs.map((c) => (
                       <div
-                       key={c.id}
-                        style={weekStyles.job}
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData("customerId", c.id);
-                      }}
->
+                          key={c.id}
+                          style={{
+                            ...weekStyles.job,
+                            cursor: "grab",
+                          }}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("customerId", c.id);
+                          }}
+                        >
                         <div style={{ fontWeight: 600 }}>{c.name}</div>
                         <div style={{ fontSize: 12, opacity: 0.6 }}>
                           {c.address}
@@ -384,12 +396,11 @@ function Card({ title, value }: any) {
   );
 }
 
+const isMobile =
+  typeof window !== "undefined" && window.innerWidth < 768;
+
 /* ---------------- STYLES ---------------- */
 const styles: any = {
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-  gridTemplateColumns: isMobile
-  ? "1fr"
-  : "repeat(2, minmax(0, 1fr))",
   page: {
     padding: "clamp(12px, 3vw, 24px)",
     background: "#f4f4f6",
@@ -494,6 +505,11 @@ const styles: any = {
     color: "#fff",
     fontSize: 12,
   },
+
+  draggingItem: {
+    opacity: 0.5,
+    transform: "scale(0.98)",
+  }
 
   item: {
     background: "#fff",
