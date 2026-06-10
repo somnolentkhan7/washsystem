@@ -25,7 +25,7 @@ console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
 console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   const [directions, setDirections] = useState<any>(null);
-  const [tab, setTab] = useState<"dashboard" | "jobs" | "map">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar">("dashboard");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">(
     "all"
@@ -217,6 +217,17 @@ useEffect(() => {
 
 
   /* ---------------- METRICS ---------------- */
+const groupedByDate = customers.reduce((acc: any, customer) => {
+  if (!customer.date) return acc;
+
+  const date = customer.date;
+
+  if (!acc[date]) acc[date] = [];
+  acc[date].push(customer);
+
+  return acc;
+}, {});
+
   const revenue = customers
     .filter((c) => c.completed)
     .reduce((sum, c) => sum + c.price, 0);
@@ -234,7 +245,7 @@ useEffect(() => {
 
       {/* TABS */}
       <div style={styles.tabs}>
-        {["dashboard", "jobs", "map"].map((t) => (
+        {["dashboard", "jobs", "map", "calendar"].map((t) => (
           <button
             key={t}
             onClick={() => setTab(t as any)}
@@ -376,6 +387,43 @@ useEffect(() => {
             ))}
         </div>
       )}
+      {/* CALENDAR */}
+{tab === "calendar" && (
+  <div>
+    <div style={styles.card}>
+      <h3>Calendar</h3>
+      <p style={{ opacity: 0.6 }}>
+        All scheduled jobs by date
+      </p>
+    </div>
+
+    {Object.keys(groupedByDate)
+      .sort()
+      .map((date) => (
+        <div key={date} style={styles.card}>
+          <h4 style={{ marginBottom: 10 }}>{date}</h4>
+
+          {groupedByDate[date].map((c: Customer) => (
+            <div key={c.id} style={styles.item}>
+              <div style={styles.name}>{c.name}</div>
+              <div style={styles.sub}>{c.address}</div>
+              <div style={styles.price}>${c.price}</div>
+
+              <div style={styles.row}>
+                <button onClick={() => toggleComplete(c)}>
+                  {c.completed ? "Undo" : "Complete"}
+                </button>
+
+                <button onClick={() => deleteCustomer(c.id)}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+  </div>
+)}
 
       {/* MAP */}
       {tab === "map" && <MapView customers={customers} />}
