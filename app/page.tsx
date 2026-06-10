@@ -544,39 +544,78 @@ async function moveCustomerToDate(
     }}
   >
     <div
-      onClick={(e) => e.stopPropagation()}
-      style={{
-        background: "white",
-        padding: 20,
-        borderRadius: 16,
-        width: "90%",
-        maxWidth: 400,
-      }}
-    >
-      <h3>{selectedCustomer.name}</h3>
-      <p>{selectedCustomer.address}</p>
+  onClick={(e) => e.stopPropagation()}
+  style={{
+    background: "#ffffff",
+    padding: 20,
+    borderRadius: 18,
+    width: "90%",
+    maxWidth: 420,
+    boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+    fontFamily:
+      "-apple-system, BlinkMacSystemFont, SF Pro Display, Inter, sans-serif",
+  }}
+>
+      <h2 style={{ marginBottom: 6 }}>{selectedCustomer.name}</h2>
+      <span
+  style={{
+    display: "inline-block",
+    marginTop: 6,
+    padding: "4px 10px",
+    borderRadius: 999,
+    fontSize: 12,
+    background: selectedCustomer.completed ? "#dcfce7" : "#fef9c3",
+    color: selectedCustomer.completed ? "#166534" : "#92400e",
+  }}
+>
+  {selectedCustomer.completed ? "COMPLETED" : "PENDING"}
+</span>
 
-      <p>
-        Status: {selectedCustomer.completed ? "Done" : "Not Done"}
-      </p>
+<p style={{ opacity: 0.6, marginBottom: 10 }}>
+  {selectedCustomer.address}
+</p>
+
+<div style={{ display: "grid", gap: 6, fontSize: 14 }}>
+  <div>
+    📞 <strong>Phone:</strong> {selectedCustomer.phone || "No phone"}
+  </div>
+
+  <div>
+    🧼 <strong>Service:</strong>{" "}
+    {selectedCustomer.services?.length
+      ? selectedCustomer.services.join(", ")
+      : "No service selected"}
+  </div>
+
+  <div>
+    💵 <strong>Price:</strong> ${selectedCustomer.price}
+  </div>
+
+  <div>
+    📊 <strong>Status:</strong>{" "}
+    {selectedCustomer.completed ? "Completed" : "Pending"}
+  </div>
+</div>
 
       <button
-        onClick={async () => {
-          await toggleComplete(selectedCustomer);
-          setSelectedCustomer(null);
-        }}
-        style={{
-          width: "100%",
-          padding: 10,
-          marginTop: 10,
-          background: "#1d1d1f",
-          color: "#fff",
-          border: "none",
-          borderRadius: 10,
-        }}
-      >
-        Mark Complete
-      </button>
+  onClick={async () => {
+    await toggleComplete(selectedCustomer);
+    setSelectedCustomer(null);
+  }}
+  style={{
+    width: "100%",
+    padding: 12,
+    marginTop: 14,
+    borderRadius: 12,
+    border: "none",
+    background: selectedCustomer.completed ? "#999" : "#1d1d1f",
+    color: "#fff",
+    fontWeight: 600,
+    cursor: "pointer",
+  }}
+>
+  {selectedCustomer.completed ? "Mark Incomplete" : "Mark Complete"}
+</button>
 
       <button
         onClick={() => setSelectedCustomer(null)}
