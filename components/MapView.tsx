@@ -52,7 +52,7 @@ export default function MapView({
  useEffect(() => {
   if (!isLoaded) return;
   if (typeof window === "undefined") return;
-  if (!window.google) return;
+  if (!window.google?.maps) return;
 
   const todayKey = new Date().toISOString().split("T")[0];
 
@@ -64,22 +64,26 @@ export default function MapView({
 
   const origin = stops[0];
   const destination = stops[stops.length - 1];
+
   const waypoints = stops.slice(1, -1).map((c) => ({
-    location: { lat: c.lat!, lng: c.lng! },
+    location: new window.google.maps.LatLng(c.lat!, c.lng!),
     stopover: true,
   }));
 
-  const service = new google.maps.DirectionsService();
+  const service = new window.google.maps.DirectionsService();
 
   service.route(
     {
-      origin: { lat: origin.lat!, lng: origin.lng! },
-      destination: { lat: destination.lat!, lng: destination.lng! },
+      origin: new window.google.maps.LatLng(origin.lat!, origin.lng!),
+      destination: new window.google.maps.LatLng(
+        destination.lat!,
+        destination.lng!
+      ),
       waypoints,
-      travelMode: google.maps.TravelMode.DRIVING,
+      travelMode: window.google.maps.TravelMode.DRIVING,
     },
     (result, status) => {
-      if (status === "OK") {
+      if (status === "OK" && result) {
         setDirections(result);
       } else {
         console.log("Directions error:", status);
