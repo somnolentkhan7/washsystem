@@ -35,9 +35,7 @@ export default function Home() {
 
   const [weekOffset] = useState(0);
 
-  const [hoverDate, setHoverDate] = useState("");
-
-  const [hoverDate, setHoverDate] = useState<string | null>(null);
+ const [hoverDate, setHoverDate] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -509,7 +507,7 @@ const styles: any = {
   draggingItem: {
     opacity: 0.5,
     transform: "scale(0.98)",
-  }
+  },
 
   item: {
     background: "#fff",
