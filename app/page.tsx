@@ -22,6 +22,22 @@ type Customer = {
 /* ---------------- HELPERS ---------------- */
 const getDateKey = (date: Date) => date.toISOString().split("T")[0];
 
+function formatPhone(value: string) {
+  const cleaned = value.replace(/\D/g, "").slice(0, 10);
+
+  const match = cleaned.match(/^(\d{0,3})(\d{0,3})(\d{0,4})$/);
+
+  if (!match) return value;
+
+  const [, area, first, second] = match;
+
+  if (second) return `(${area}) ${first}-${second}`;
+  if (first) return `(${area}) ${first}`;
+  if (area) return `(${area}`;
+
+  return value;
+}
+
 /* ---------------- PAGE ---------------- */
 export default function Home() {
 const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -330,13 +346,16 @@ async function moveCustomerToDate(
             />
 
             <input
-                placeholder="Phone Number"
-                style={styles.input}
-                value={form.phone}
-                onChange={(e) =>
-                  setForm({ ...form, phone: e.target.value })
-                }
-              />
+              placeholder="Phone Number"
+              style={styles.input}
+              value={form.phone}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  phone: formatPhone(e.target.value),
+                })
+              }
+            />
 
             <input
               placeholder="Address"
