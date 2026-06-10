@@ -3,6 +3,7 @@
 import MapView from "../components/MapView";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "../lib/supabase";
+import InsightsTab from "./InsightsTab";
 
 /* ---------------- TYPES ---------------- */
 type Customer = {
@@ -79,8 +80,7 @@ function calcArrivalTimes(jobs: Customer[], startTime: string) {
 export default function Home() {
   const [calendarView, setCalendarView] = useState<"week" | "month">("week");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar">("dashboard");
-  const [customers, setCustomers] = useState<Customer[]>([]);
+const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar" | "insights">("dashboard");  const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">("all");
   const [weekOffset, setWeekOffset] = useState(0);
   const [hoverDate, setHoverDate] = useState<string | null>(null);
@@ -240,7 +240,7 @@ export default function Home() {
 
       {/* TABS */}
       <div style={styles.tabs}>
-        {["dashboard", "jobs", "map", "calendar"].map((t) => (
+        {["dashboard", "jobs", "map", "calendar", "insights"].map((t) => (
           <button
             key={t}
             onClick={() => setTab(t as any)}
@@ -520,6 +520,8 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {tab === "insights" && <InsightsTab customers={customers} />}
 
       {/* MAP */}
       {tab === "map" && <MapView customers={customers} refreshCustomers={loadCustomers} />}
