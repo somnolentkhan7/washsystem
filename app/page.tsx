@@ -89,6 +89,12 @@ const routeJobs = !start
     services: [] as string[],
   });
 
+  function getPinColor(customer: Customer) {
+  if (customer.completed) return "green";
+  if (customer.date === getDateKey(new Date())) return "orange";
+  return "red";
+}
+
   /* ---------------- LOAD ---------------- */
   async function loadCustomers() {
     const { data, error } = await supabase.from("customers").select("*");
