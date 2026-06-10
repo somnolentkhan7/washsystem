@@ -1,4 +1,10 @@
 "use client";
+const [selected, setSelected] = useState<Customer | null>(null);
+  const [directions, setDirections] = useState<any>(null);
+
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+  });
 
 import {
   GoogleMap,
@@ -32,14 +38,8 @@ export default function MapView({
   customers: Customer[];
   refreshCustomers: () => void;
 }) {
-  const [selected, setSelected] = useState<Customer | null>(null);
-  const [directions, setDirections] = useState<any>(null);
+  
 
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-  });
-
-  if (!isLoaded) return <p>Loading map...</p>;
 
   /* ---------------- COLORS ---------------- */
   function getPinColor(c: Customer) {
@@ -104,7 +104,11 @@ export default function MapView({
   }
 
   return (
-    <div style={{ position: "relative" }}>
+    return (
+  <div style={{ position: "relative" }}>
+    {!isLoaded ? (
+      <p>Loading map...</p>
+    ) : (
       <GoogleMap
         zoom={12}
         center={{
