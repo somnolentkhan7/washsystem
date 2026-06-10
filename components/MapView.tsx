@@ -2,6 +2,7 @@
 
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 import { useState } from "react";
+import { supabase } from "../lib/supabase";
 
 /* ---------------- TYPES ---------------- */
 type Customer = {
@@ -19,7 +20,13 @@ type Customer = {
 };
 
 /* ---------------- COMPONENT ---------------- */
-export default function MapView({ customers }: { customers: Customer[] }) {
+export default function MapView({
+  customers,
+  refreshCustomers,
+}: {
+  customers: Customer[];
+  refreshCustomers: () => void;
+}) {
   const [selected, setSelected] = useState<Customer | null>(null);
 
   const { isLoaded } = useLoadScript({
@@ -33,6 +40,22 @@ export default function MapView({ customers }: { customers: Customer[] }) {
     if (c.completed) return "green";
     if (c.date === new Date().toISOString().split("T")[0]) return "orange";
     return "red";
+  }
+
+  /* ---------------- TOGGLE COMPLETE (REAL DB UPDATE) ---------------- */
+  async function toggleComplete(customer: Customer) {
+    const { error } = await supabase
+      .from("customers")
+      .update({ completed: !customer.completed })
+      .eq("id", customer.id);
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    setSelected(null);     // close popup
+    refreshCustomers();    // reload map data
   }
 
   return (
@@ -69,7 +92,7 @@ export default function MapView({ customers }: { customers: Customer[] }) {
           ))}
       </GoogleMap>
 
-      {/* ---------------- CUSTOM POPUP ---------------- */}
+      {/* ---------------- POPUP ---------------- */}
       {selected && (
         <div
           style={{
@@ -82,7 +105,6 @@ export default function MapView({ customers }: { customers: Customer[] }) {
             borderRadius: 18,
             padding: 16,
             boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-            zIndex: 1000,
             fontFamily:
               "-apple-system, BlinkMacSystemFont, Inter, sans-serif",
           }}
@@ -103,7 +125,6 @@ export default function MapView({ customers }: { customers: Customer[] }) {
                 fontSize: 11,
                 padding: "4px 10px",
                 borderRadius: 999,
-                height: "fit-content",
                 background: selected.completed ? "#dcfce7" : "#fef9c3",
                 color: selected.completed ? "#166534" : "#92400e",
               }}
@@ -116,7 +137,8 @@ export default function MapView({ customers }: { customers: Customer[] }) {
           <div style={{ marginTop: 12, fontSize: 13, opacity: 0.85 }}>
             <div>📞 {selected.phone || "No phone"}</div>
             <div>
-              🧼 {selected.services?.length
+              🧼{" "}
+              {selected.services?.length
                 ? selected.services.join(", ")
                 : "No services"}
             </div>
@@ -132,12 +154,7 @@ export default function MapView({ customers }: { customers: Customer[] }) {
           {/* BUTTONS */}
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
             <button
-              onClick={() => {
-                setSelected({
-                  ...selected,
-                  completed: !selected.completed,
-                });
-              }}
+              onClick={() => toggleComplete(selected)}
               style={{
                 flex: 1,
                 padding: 10,
