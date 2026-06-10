@@ -54,23 +54,11 @@ const todayJobs = customers.filter(
   (c) => c.date === todayKey
 );
 
-const start = todayJobs[0];
-
-const routeJobs = !start
-  ? []
-  : [...todayJobs].sort((a, b) => {
-      const distA = Math.hypot(
-        (a.lat ?? 0) - (start.lat ?? 0),
-        (a.lng ?? 0) - (start.lng ?? 0)
-      );
-
-      const distB = Math.hypot(
-        (b.lat ?? 0) - (start.lat ?? 0),
-        (b.lng ?? 0) - (start.lng ?? 0)
-      );
-
-      return distA - distB;
-    });
+const HOME = { lat: 30.20320, lng: -97.85231 };
+const routeJobs = [...todayJobs].sort((a, b) =>
+  Math.hypot((a.lat ?? 0) - HOME.lat, (a.lng ?? 0) - HOME.lng) -
+  Math.hypot((b.lat ?? 0) - HOME.lat, (b.lng ?? 0) - HOME.lng)
+);
 
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">(
     "all"
@@ -216,15 +204,6 @@ async function moveCustomerToDate(
   loadCustomers();
 }
 
-  /* ---------------- SERVICES ---------------- */
-  function toggleService(service: string) {
-    setForm((prev) => ({
-      ...prev,
-      services: prev.services.includes(service)
-        ? prev.services.filter((s) => s !== service)
-        : [...prev.services, service],
-    }));
-  }
 
   /* ---------------- CALENDAR ---------------- */
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
@@ -239,10 +218,7 @@ async function moveCustomerToDate(
 });
 const monthDays = Array.from({ length: 30 }).map((_, i) => {
   const d = new Date();
-  d.setDate(d.getDate() + i);
-
-  const calendarDays =
-  calendarView === "week" ? weekDays : monthDays;
+  d.setDate(d.getDate() + weekOffset * 7 + i);
   return d;
 });
 
@@ -253,6 +229,13 @@ const monthDays = Array.from({ length: 30 }).map((_, i) => {
 
   const completed = customers.filter((c) => c.completed).length;
   const pending = customers.length - completed;
+  const calendarDays = calendarView === "week" ? weekDays : monthDays;
+
+return (
+    <main style={styles.page}></main>
+
+
+
 
   /* ---------------- UI ---------------- */
   return (
@@ -435,7 +418,12 @@ const monthDays = Array.from({ length: 30 }).map((_, i) => {
     </button>
   ))}
 </div>
-
+          <textarea
+  placeholder="Notes"
+  style={styles.input}
+  value={form.notes}
+  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+/>
             <button style={styles.addBtn} onClick={addCustomer}>
               Add Job
             </button>
@@ -806,8 +794,6 @@ function Card({ title, value }: any) {
   );
 }
 
-const isMobile =
-  typeof window !== "undefined" && window.innerWidth < 768;
 
 /* ---------------- STYLES ---------------- */
 const styles: any = {
