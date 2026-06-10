@@ -24,6 +24,12 @@ type Customer = {
   lng?: number;
 };
 
+/* ---------------- HOUSE START LOCATION ---------------- */
+const START_LOCATION = {
+  lat: 30.2672,   // <-- CHANGE THIS (your house lat)
+  lng: -97.7431,  // <-- CHANGE THIS (your house lng)
+};
+
 /* ---------------- COMPONENT ---------------- */
 export default function MapView({
   customers,
@@ -46,7 +52,7 @@ export default function MapView({
     return "red";
   }
 
-  /* ---------------- BUILD TODAY ROUTE ---------------- */
+  /* ---------------- BUILD ROUTE (STARTS FROM YOUR HOUSE) ---------------- */
   useEffect(() => {
     if (!isLoaded) return;
     if (!window.google?.maps) return;
@@ -57,12 +63,11 @@ export default function MapView({
       (c) => c.date === todayKey && c.lat && c.lng
     );
 
-    if (stops.length < 2) return;
+    if (stops.length === 0) return;
 
-    const origin = stops[0];
     const destination = stops[stops.length - 1];
 
-    const waypoints = stops.slice(1, -1).map((c) => ({
+    const waypoints = stops.map((c) => ({
       location: new window.google.maps.LatLng(c.lat!, c.lng!),
       stopover: true,
     }));
@@ -71,12 +76,18 @@ export default function MapView({
 
     service.route(
       {
-        origin: new window.google.maps.LatLng(origin.lat!, origin.lng!),
+        origin: new window.google.maps.LatLng(
+          START_LOCATION.lat,
+          START_LOCATION.lng
+        ),
+
         destination: new window.google.maps.LatLng(
           destination.lat!,
           destination.lng!
         ),
+
         waypoints,
+
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
@@ -101,18 +112,13 @@ export default function MapView({
   }
 
   /* ---------------- LOADING ---------------- */
-  if (!isLoaded) {
-    return <p>Loading map...</p>;
-  }
+  if (!isLoaded) return <p>Loading map...</p>;
 
   return (
     <div style={{ position: "relative" }}>
       <GoogleMap
         zoom={12}
-        center={{
-          lat: customers.find((c) => c.lat)?.lat || 30.2672,
-          lng: customers.find((c) => c.lng)?.lng || -97.7431,
-        }}
+        center={START_LOCATION}
         mapContainerStyle={{
           width: "100%",
           height: "80vh",
@@ -120,11 +126,17 @@ export default function MapView({
         }}
       >
         {/* ROUTE LINE */}
-        {directions && (
-          <DirectionsRenderer directions={directions} />
-        )}
+        {directions && <DirectionsRenderer directions={directions} />}
 
-        {/* MARKERS */}
+        {/* START PIN (YOUR HOUSE) */}
+        <Marker
+          position={START_LOCATION}
+          icon={{
+            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+          }}
+        />
+
+        {/* CUSTOMER PINS */}
         {customers
           .filter((c) => c.lat && c.lng)
           .map((c) => (
@@ -207,9 +219,7 @@ export default function MapView({
               cursor: "pointer",
             }}
           >
-            {selected.completed
-              ? "Mark Incomplete"
-              : "Mark Complete"}
+            {selected.completed ? "Mark Incomplete" : "Mark Complete"}
           </button>
         </div>
       )}
