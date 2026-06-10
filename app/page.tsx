@@ -24,12 +24,60 @@ export default function Home() {
 console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
 console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
+  const [directions, setDirections] = useState<any>(null);
   const [tab, setTab] = useState<"dashboard" | "jobs" | "map">("dashboard");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">(
     "all"
   );
   const [routeMode] = useState(false);
+
+async function getOptimizedRoute(customers: Customer[]) {
+  if (!window.google) return;
+
+  const origin = "Austin, TX";
+
+  const stops = customers.filter((c) => c.lat && c.lng);
+
+  if (stops.length === 0) return;
+
+  const directionsService = new google.maps.DirectionsService();
+
+  return new Promise((resolve, reject) => {
+    directionsService.route(
+      {
+        origin,
+        destination: origin,
+        travelMode: google.maps.TravelMode.DRIVING,
+        optimizeWaypoints: true,
+        waypoints: stops.map((c) => ({
+          location: { lat: c.lat!, lng: c.lng! },
+          stopover: true,
+        })),
+      },
+      (result, status) => {
+        if (status === "OK") {
+          resolve(result);
+        } else {
+          reject(status);
+        }
+      }
+    );
+  });
+}
+
+useEffect(() => {
+  if (!routeMode) return;
+
+  (async () => {
+    try {
+      const result = await getOptimizedRoute(customers);
+      setDirections(result);
+    } catch (err) {
+      console.log("Route error:", err);
+    }
+  })();
+}, [routeMode, customers]);
 
   const [form, setForm] = useState({
     name: "",
@@ -43,6 +91,8 @@ console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
   console.log("GOOGLE KEY:", process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
+
+
 
 
   /* ---------------- LOAD ---------------- */
@@ -170,10 +220,6 @@ console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
     }));
   }
 
-  /* ---------------- ROUTE ---------------- */
-  const optimizedRoute = customers
-    .filter((c) => !c.completed && c.lat && c.lng)
-    .sort(() => Math.random() - 0.5);
 
   /* ---------------- METRICS ---------------- */
   const revenue = customers
@@ -185,33 +231,36 @@ console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   /* ---------------- MAP ---------------- */
   function MapView({ customers }: { customers: Customer[] }) {
-    const { isLoaded } = useLoadScript({
-      googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-    });
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+  });
 
-    if (!isLoaded) return <p>Loading map...</p>;
+  if (!isLoaded) return <p>Loading map...</p>;
 
-    const center = { lat: 30.2672, lng: -97.7431 };
+  const center = { lat: 30.2672, lng: -97.7431 };
 
-    return (
-      <div style={{ height: 500, width: "100%", marginTop: 20 }}>
-        <GoogleMap
-          zoom={11}
-          center={center}
-          mapContainerStyle={{ height: "100%", width: "100%" }}
-        >
-          {customers.map((c) =>
-            c.lat && c.lng ? (
-              <Marker
-                key={c.id}
-                position={{ lat: c.lat, lng: c.lng }}
-              />
-            ) : null
-          )}
-        </GoogleMap>
-      </div>
-    );
-  }
+  return (
+    <div style={{ height: 500, width: "100%", marginTop: 20 }}>
+      <GoogleMap
+        zoom={11}
+        center={center}
+        mapContainerStyle={{ height: "100%", width: "100%" }}
+      >
+        {/* ROUTE LINE */}
+        {directions && (
+          <DirectionsRenderer directions={directions} />
+        )}
+
+        {/* MARKERS */}
+        {customers.map((c) =>
+          c.lat && c.lng ? (
+            <Marker key={c.id} position={{ lat: c.lat, lng: c.lng }} />
+          ) : null
+        )}
+      </GoogleMap>
+    </div>
+  );
+}
 
   /* ---------------- UI ---------------- */
   return (
