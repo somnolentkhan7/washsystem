@@ -841,7 +841,7 @@ const styles: any = {
   top: 0,
   zIndex: 100,
 
-  padding: "10px 10px",
+  padding: "12px 10px",
   marginBottom: 16,
 
   background: "rgba(255,255,255,0.6)",
@@ -853,9 +853,9 @@ const styles: any = {
   msOverflowStyle: "none",
 },
   tab: {
-  padding: "8px 12px",
+  padding: "10px 14px",
   borderRadius: 999,
-  fontSize: 12,
+  fontSize: 13,
   cursor: "pointer",
 
   whiteSpace: "nowrap",
@@ -868,9 +868,9 @@ const styles: any = {
   transition: "all 0.15s ease",
 },
   activeTab: {
-  padding: "8px 14px",
+  padding: "10px 16px",
   borderRadius: 999,
-  fontSize: 12,
+  fontSize: 13,
   cursor: "pointer",
 
   whiteSpace: "nowrap",
@@ -881,7 +881,7 @@ const styles: any = {
   color: "#fff",
 
   boxShadow: "0 6px 18px rgba(0,0,0,0.15)",
-  transform: "scale(1.03)",
+  transform: "scale(1.04)",
 
   transition: "all 0.15s ease",
 },
