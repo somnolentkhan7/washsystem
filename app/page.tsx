@@ -82,27 +82,33 @@ export default function Home() {
   };
 
   /* ---------------- ADD ---------------- */
-  async function addCustomer() {
-    if (!form.name || !form.address) return;
+ async function addCustomer() {
+  if (!form.name || !form.address) return;
 
+  try {
     const coords = await geocodeAddress(form.address);
 
-    const { error } = await supabase.from("customers").insert({
-      id: crypto.randomUUID(),
-      name: form.name,
-      phone: form.phone,
-      address: form.address,
-      price: Number(form.price),
-      date: form.date,
-      completed: false,
-      services: form.services,
-      notes: form.notes,
-      lat: coords?.lat ?? null,
-      lng: coords?.lng ?? null,
-    });
+    console.log("GEOCODE RESULT:", coords);
+
+    const { data, error } = await supabase.from("customers").insert([
+      {
+        name: form.name,
+        phone: form.phone,
+        address: form.address,
+        price: Number(form.price || 0),
+        date: form.date,
+        completed: false,
+        services: form.services,
+        notes: form.notes,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
+      },
+    ]);
+
+    console.log("SUPABASE RESPONSE:", { data, error });
 
     if (error) {
-      console.log(error);
+      alert(error.message);
       return;
     }
 
@@ -117,7 +123,10 @@ export default function Home() {
       notes: "",
       services: [],
     });
+  } catch (err) {
+    console.log("ADD CUSTOMER ERROR:", err);
   }
+}
 
   /* ---------------- UPDATE ---------------- */
   async function toggleComplete(customer: Customer) {
