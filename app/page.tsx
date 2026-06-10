@@ -1,12 +1,7 @@
 "use client";
 
+import MapView from "../components/MapView";
 import { useEffect, useState } from "react";
-import {
-  GoogleMap,
-  Marker,
-  useLoadScript,
-  DirectionsRenderer,
-} from "@react-google-maps/api";
 import { supabase } from "../lib/supabase";
 
 /* ---------------- TYPES ---------------- */
@@ -229,38 +224,6 @@ useEffect(() => {
   const completed = customers.filter((c) => c.completed).length;
   const pending = customers.length - completed;
 
-  /* ---------------- MAP ---------------- */
-  function MapView({ customers }: { customers: Customer[] }) {
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-  });
-
-  if (!isLoaded) return <p>Loading map...</p>;
-
-  const center = { lat: 30.2672, lng: -97.7431 };
-
-  return (
-    <div style={{ height: 500, width: "100%", marginTop: 20 }}>
-      <GoogleMap
-        zoom={11}
-        center={center}
-        mapContainerStyle={{ height: "100%", width: "100%" }}
-      >
-        {/* ROUTE LINE */}
-        {directions && (
-          <DirectionsRenderer directions={directions} />
-        )}
-
-        {/* MARKERS */}
-        {customers.map((c) =>
-          c.lat && c.lng ? (
-            <Marker key={c.id} position={{ lat: c.lat, lng: c.lng }} />
-          ) : null
-        )}
-      </GoogleMap>
-    </div>
-  );
-}
 
   /* ---------------- UI ---------------- */
   return (
