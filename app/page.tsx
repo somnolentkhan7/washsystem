@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  Marker,
+  useLoadScript,
+  DirectionsRenderer,
+} from "@react-google-maps/api";
 import { supabase } from "../lib/supabase";
 
 /* ---------------- TYPES ---------------- */
@@ -33,22 +38,20 @@ console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const [routeMode] = useState(false);
 
 async function getOptimizedRoute(customers: Customer[]) {
-  if (!window.google) return;
-
-  const origin = "Austin, TX";
+  if (typeof window === "undefined") return null;
+  if (!window.google?.maps) return null;
 
   const stops = customers.filter((c) => c.lat && c.lng);
+  if (stops.length === 0) return null;
 
-  if (stops.length === 0) return;
-
-  const directionsService = new google.maps.DirectionsService();
+  const service = new window.google.maps.DirectionsService();
 
   return new Promise((resolve, reject) => {
-    directionsService.route(
+    service.route(
       {
-        origin,
-        destination: origin,
-        travelMode: google.maps.TravelMode.DRIVING,
+        origin: "Austin, TX",
+        destination: "Austin, TX",
+        travelMode: window.google.maps.TravelMode.DRIVING,
         optimizeWaypoints: true,
         waypoints: stops.map((c) => ({
           location: { lat: c.lat!, lng: c.lng! },
@@ -56,11 +59,8 @@ async function getOptimizedRoute(customers: Customer[]) {
         })),
       },
       (result, status) => {
-        if (status === "OK") {
-          resolve(result);
-        } else {
-          reject(status);
-        }
+        if (status === "OK") resolve(result);
+        else reject(status);
       }
     );
   });
