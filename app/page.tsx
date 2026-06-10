@@ -17,6 +17,7 @@ type Customer = {
   notes: string;
   lat?: number;
   lng?: number;
+  time?: string;
 };
 
 /* ---------------- HELPERS ---------------- */
@@ -644,6 +645,11 @@ const monthDays = Array.from({ length: 35 }).map((_, i) => {
                   <div style={{ fontSize: 11, opacity: 0.6 }}>
                     {c.address}
                   </div>
+                  {c.time && (
+  <div style={{ fontSize: 11, opacity: 0.6 }}>
+    ⏰ {c.time}
+  </div>
+)}
 
                   {/* STATUS */}
                   <div
@@ -741,6 +747,21 @@ const monthDays = Array.from({ length: 35 }).map((_, i) => {
     📊 <strong>Status:</strong>{" "}
     {selectedCustomer.completed ? "Completed" : "Pending"}
   </div>
+  <div style={{ marginTop: 10 }}>
+  <strong>⏰ Time:</strong>
+  <input
+    type="time"
+    defaultValue={selectedCustomer.time || ""}
+    onChange={async (e) => {
+      await supabase
+        .from("customers")
+        .update({ time: e.target.value })
+        .eq("id", selectedCustomer.id);
+      loadCustomers();
+    }}
+    style={{ marginLeft: 8, padding: "4px 8px", borderRadius: 8, border: "1px solid #ddd" }}
+  />
+</div>
 </div>
 
       <button
