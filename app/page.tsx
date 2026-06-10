@@ -82,7 +82,9 @@ console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   /* ---------------- ADD ---------------- */
  async function addCustomer() {
-  console.log("SUPABASE CLIENT TEST", supabase);
+  console.log("INSERT START");
+  console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+  console.log("KEY EXISTS:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   if (!form.name || !form.address) return;
 
   try {
