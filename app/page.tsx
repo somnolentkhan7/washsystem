@@ -350,7 +350,7 @@ useEffect(() => {
             ))}
           </div>
 
-          {(routeMode ? optimizedRoute : customers)
+          {customers
             .filter((c) => {
               if (jobFilter === "all") return true;
               if (jobFilter === "done") return c.completed;
