@@ -6,7 +6,7 @@ import {
   DirectionsRenderer,
   useLoadScript,
 } from "@react-google-maps/api";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 /* ---------------- TYPES ---------------- */
@@ -24,10 +24,10 @@ type Customer = {
   lng?: number;
 };
 
-/* ---------------- HOUSE START LOCATION ---------------- */
+/* ---------------- HOUSE ---------------- */
 const START_LOCATION = {
-  lat: 30.2672,   // <-- CHANGE THIS (your house lat)
-  lng: -97.7431,  // <-- CHANGE THIS (your house lng)
+  lat: 30.176466,
+  lng: -97.868778,
 };
 
 /* ---------------- COMPONENT ---------------- */
@@ -45,29 +45,45 @@ export default function MapView({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
   });
 
-  /* ---------------- PIN COLOR ---------------- */
+  /* ---------------- PIN COLORS ---------------- */
   function getPinColor(c: Customer) {
     if (c.completed) return "green";
     if (c.date === new Date().toISOString().split("T")[0]) return "orange";
     return "red";
   }
 
-  /* ---------------- BUILD ROUTE (STARTS FROM YOUR HOUSE) ---------------- */
+  /* ---------------- TODAY JOBS ---------------- */
+  const todayKey = useMemo(
+    () => new Date().toISOString().split("T")[0],
+    []
+  );
+
+  const todayStops = useMemo(() => {
+    return customers
+      .filter((c) => c.date === todayKey && c.lat && c.lng)
+      .slice(); // copy
+  }, [customers, todayKey]);
+
+  /* ---------------- SORT (IMPORTANT FOR NUMBERING) ---------------- */
+  const orderedStops = useMemo(() => {
+    if (todayStops.length === 0) return [];
+
+    const start = START_LOCATION;
+
+    return [...todayStops].sort((a, b) => {
+      const distA = Math.hypot((a.lat! - start.lat), (a.lng! - start.lng));
+      const distB = Math.hypot((b.lat! - start.lat), (b.lng! - start.lng));
+      return distA - distB;
+    });
+  }, [todayStops]);
+
+  /* ---------------- ROUTE ---------------- */
   useEffect(() => {
     if (!isLoaded) return;
     if (!window.google?.maps) return;
+    if (orderedStops.length === 0) return;
 
-    const todayKey = new Date().toISOString().split("T")[0];
-
-    const stops = customers.filter(
-      (c) => c.date === todayKey && c.lat && c.lng
-    );
-
-    if (stops.length === 0) return;
-
-    const destination = stops[stops.length - 1];
-
-    const waypoints = stops.map((c) => ({
+    const waypoints = orderedStops.map((c) => ({
       location: new window.google.maps.LatLng(c.lat!, c.lng!),
       stopover: true,
     }));
@@ -80,14 +96,11 @@ export default function MapView({
           START_LOCATION.lat,
           START_LOCATION.lng
         ),
-
         destination: new window.google.maps.LatLng(
-          destination.lat!,
-          destination.lng!
+          orderedStops[orderedStops.length - 1].lat!,
+          orderedStops[orderedStops.length - 1].lng!
         ),
-
         waypoints,
-
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
@@ -98,7 +111,7 @@ export default function MapView({
         }
       }
     );
-  }, [customers, isLoaded]);
+  }, [orderedStops, isLoaded]);
 
   /* ---------------- TOGGLE COMPLETE ---------------- */
   async function toggleComplete(customer: Customer) {
@@ -125,10 +138,10 @@ export default function MapView({
           borderRadius: 16,
         }}
       >
-        {/* ROUTE LINE */}
+        {/* ROUTE */}
         {directions && <DirectionsRenderer directions={directions} />}
 
-        {/* START PIN (YOUR HOUSE) */}
+        {/* HOUSE */}
         <Marker
           position={START_LOCATION}
           icon={{
@@ -136,24 +149,27 @@ export default function MapView({
           }}
         />
 
-        {/* CUSTOMER PINS */}
-        {customers
-          .filter((c) => c.lat && c.lng)
-          .map((c) => (
-            <Marker
-              key={c.id}
-              position={{ lat: c.lat!, lng: c.lng! }}
-              onClick={() => setSelected(c)}
-              icon={{
-                url:
-                  getPinColor(c) === "green"
-                    ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
-                    : getPinColor(c) === "orange"
-                    ? "http://maps.google.com/mapfiles/ms/icons/orange-dot.png"
-                    : "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-              }}
-            />
-          ))}
+        {/* NUMBERED CUSTOMER PINS */}
+        {orderedStops.map((c, index) => (
+          <Marker
+            key={c.id}
+            position={{ lat: c.lat!, lng: c.lng! }}
+            onClick={() => setSelected(c)}
+            label={{
+              text: String(index + 1),
+              color: "white",
+              fontWeight: "bold",
+            }}
+            icon={{
+              url:
+                getPinColor(c) === "green"
+                  ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+                  : getPinColor(c) === "orange"
+                  ? "http://maps.google.com/mapfiles/ms/icons/orange-dot.png"
+                  : "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+            }}
+          />
+        ))}
       </GoogleMap>
 
       {/* POPUP */}
@@ -173,7 +189,6 @@ export default function MapView({
               "-apple-system, BlinkMacSystemFont, Inter, sans-serif",
           }}
         >
-          {/* HEADER */}
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontWeight: 700 }}>{selected.name}</div>
@@ -195,7 +210,6 @@ export default function MapView({
             </div>
           </div>
 
-          {/* INFO */}
           <div style={{ marginTop: 12, fontSize: 13 }}>
             <div>📞 {selected.phone || "No phone"}</div>
             <div>🧼 {selected.services?.join(", ")}</div>
@@ -205,7 +219,6 @@ export default function MapView({
             )}
           </div>
 
-          {/* BUTTON */}
           <button
             onClick={() => toggleComplete(selected)}
             style={{
