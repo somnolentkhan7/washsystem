@@ -40,6 +40,7 @@ function formatPhone(value: string) {
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
+const [calendarView, setCalendarView] = useState<"week" | "month">("week");
 const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   const [tab, setTab] = useState<
@@ -527,7 +528,12 @@ async function moveCustomerToDate(
             color: "#111",
           }}
         >
-          Week {weekOffset === 0 ? "Current" : weekOffset > 0 ? `+${weekOffset}` : weekOffset}
+          Week{" "}
+          {weekOffset === 0
+            ? "Current"
+            : weekOffset > 0
+            ? `+${weekOffset}`
+            : weekOffset}
         </div>
       </div>
 
@@ -559,7 +565,6 @@ async function moveCustomerToDate(
       {weekDays.map((day, i) => {
         const key = getDateKey(day);
         const jobs = customers.filter((c) => c.date === key);
-
         const isToday = key === getDateKey(new Date());
 
         return (
@@ -640,7 +645,7 @@ async function moveCustomerToDate(
                     {c.address}
                   </div>
 
-                  {/* STATUS DOT */}
+                  {/* STATUS */}
                   <div
                     style={{
                       marginTop: 6,
