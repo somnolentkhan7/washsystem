@@ -38,6 +38,10 @@ export default function Home() {
     services: [] as string[],
   });
 
+  console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+  console.log("GOOGLE KEY:", process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
+
+
   /* ---------------- LOAD ---------------- */
   async function loadCustomers() {
     const { data, error } = await supabase.from("customers").select("*");
