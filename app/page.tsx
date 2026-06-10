@@ -216,9 +216,10 @@ async function moveCustomerToDate(
 
   return d;
 });
-const monthDays = Array.from({ length: 30 }).map((_, i) => {
+const monthDays = Array.from({ length: 35 }).map((_, i) => {
   const d = new Date();
-  d.setDate(d.getDate() + weekOffset * 7 + i);
+  const day = d.getDay();
+  d.setDate(d.getDate() - day + weekOffset * 7 + i);
   return d;
 });
 
