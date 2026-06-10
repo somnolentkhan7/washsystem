@@ -501,110 +501,168 @@ async function moveCustomerToDate(
 
       {/* CALENDAR */}
       {tab === "calendar" && (
+  <div>
+    {/* HEADER CARD */}
+    <div style={styles.card}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
+      >
         <div>
-          <div style={styles.card}>
-  <h3>Weekly Calendar</h3>
+          <h3 style={{ margin: 0, fontSize: 18 }}>Weekly Calendar</h3>
+          <p style={{ opacity: 0.55, marginTop: 4, fontSize: 13 }}>
+            Drag jobs between days to schedule your route
+          </p>
+        </div>
 
-  <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-    <button
-      onClick={() => setWeekOffset((w) => w - 1)}
-      style={{
-        padding: "6px 12px",
-        borderRadius: 8,
-        border: "1px solid #ddd",
-        background: "#fff",
-        cursor: "pointer",
-      }}
-    >
-      ← Prev Week
-    </button>
+        <div
+          style={{
+            fontSize: 12,
+            padding: "4px 10px",
+            borderRadius: 999,
+            background: "#f3f4f6",
+            color: "#111",
+          }}
+        >
+          Week {weekOffset === 0 ? "Current" : weekOffset > 0 ? `+${weekOffset}` : weekOffset}
+        </div>
+      </div>
 
-    <button
-      onClick={() => setWeekOffset(0)}
-      style={{
-        padding: "6px 12px",
-        borderRadius: 8,
-        border: "1px solid #ddd",
-        background: "#fff",
-        cursor: "pointer",
-      }}
-    >
-      This Week
-    </button>
+      {/* NAV BUTTONS */}
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          marginTop: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <button onClick={() => setWeekOffset((w) => w - 1)} style={calBtn}>
+          ← Previous
+        </button>
 
-    <button
-      onClick={() => setWeekOffset((w) => w + 1)}
-      style={{
-        padding: "6px 12px",
-        borderRadius: 8,
-        border: "1px solid #ddd",
-        background: "#fff",
-        cursor: "pointer",
-      }}
-    >
-      Next Week →
-    </button>
-  </div>
+        <button onClick={() => setWeekOffset(0)} style={calBtnPrimary}>
+          Today
+        </button>
 
-  <p style={{ opacity: 0.6, marginTop: 6 }}>Your weekly schedule</p>
-</div>
+        <button onClick={() => setWeekOffset((w) => w + 1)} style={calBtn}>
+          Next →
+        </button>
+      </div>
+    </div>
 
-          <div style={weekStyles.grid}>
-            {weekDays.map((day, i) => {
-              const key = getDateKey(day);
-              const jobs = customers.filter((c) => c.date === key);
+    {/* GRID */}
+    <div style={weekStyles.grid}>
+      {weekDays.map((day, i) => {
+        const key = getDateKey(day);
+        const jobs = customers.filter((c) => c.date === key);
 
-              return (
+        const isToday = key === getDateKey(new Date());
+
+        return (
+          <div
+            key={i}
+            style={{
+              ...weekStyles.day,
+              background: hoverDate === key ? "#eef6ff" : "#fff",
+              border: isToday ? "2px solid #1d4ed8" : "1px solid #eee",
+              boxShadow: isToday
+                ? "0 0 0 2px rgba(29,78,216,0.1)"
+                : "0 1px 3px rgba(0,0,0,0.04)",
+              transition: "0.2s ease",
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setHoverDate(key);
+            }}
+            onDragLeave={() => setHoverDate(null)}
+            onDrop={(e) => {
+              const customerId = e.dataTransfer.getData("customerId");
+              moveCustomerToDate(customerId, key);
+              setHoverDate(null);
+            }}
+          >
+            {/* DAY HEADER */}
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 700 }}>
+                {day.toLocaleDateString("en-US", { weekday: "short" })}
+              </div>
+
+              <div style={{ fontSize: 11, opacity: 0.55 }}>
+                {day.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </div>
+            </div>
+
+            {/* JOB COUNT */}
+            <div
+              style={{
+                fontSize: 11,
+                marginBottom: 8,
+                opacity: 0.6,
+              }}
+            >
+              {jobs.length} job{jobs.length !== 1 ? "s" : ""}
+            </div>
+
+            {/* JOBS */}
+            {jobs.length === 0 ? (
+              <div style={{ fontSize: 12, opacity: 0.4 }}>
+                No scheduled jobs
+              </div>
+            ) : (
+              jobs.map((c) => (
                 <div
-                    key={i}
-                    style={{
-                      ...weekStyles.day,
-                      background: hoverDate === key ? "#dbeafe" : "#fff",
-                      transition: "0.2s ease",
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault(); // REQUIRED or drop won't work
-                      setHoverDate(key);   // triggers blue highlight
-                    }}
-                    onDragLeave={() => setHoverDate(null)}
-                    onDrop={(e) => {
-                      const customerId = e.dataTransfer.getData("customerId");
-                      moveCustomerToDate(customerId, key);
-                      setHoverDate(null);
-                    }}
-                  >
-                  <div style={weekStyles.header}>
-                    {day.toDateString()}
+                  key={c.id}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("customerId", c.id);
+                  }}
+                  style={{
+                    background: "#f8fafc",
+                    padding: 10,
+                    borderRadius: 10,
+                    marginBottom: 8,
+                    cursor: "grab",
+                    border: "1px solid #eef2f7",
+                  }}
+                >
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>
+                    {c.name}
                   </div>
 
-                  {jobs.length === 0 ? (
-                    <div style={{ opacity: 0.4 }}>No jobs</div>
-                  ) : (
-                    jobs.map((c) => (
-                      <div
-                          key={c.id}
-                          style={{
-                            ...weekStyles.job,
-                            cursor: "grab",
-                          }}
-                          draggable
-                          onDragStart={(e) => {
-                            e.dataTransfer.setData("customerId", c.id);
-                          }}
-                        >
-                        <div style={{ fontWeight: 600 }}>{c.name}</div>
-                        <div style={{ fontSize: 12, opacity: 0.6 }}>
-                          {c.address}
-                        </div>
-                      </div>
-                    ))
-                  )}
+                  <div style={{ fontSize: 11, opacity: 0.6 }}>
+                    {c.address}
+                  </div>
+
+                  {/* STATUS DOT */}
+                  <div
+                    style={{
+                      marginTop: 6,
+                      fontSize: 10,
+                      display: "inline-block",
+                      padding: "2px 8px",
+                      borderRadius: 999,
+                      background: c.completed ? "#dcfce7" : "#fef9c3",
+                      color: c.completed ? "#166534" : "#92400e",
+                    }}
+                  >
+                    {c.completed ? "DONE" : "PENDING"}
+                  </div>
                 </div>
-              );
-            })}
+              ))
+            )}
           </div>
-        </div>
-      )}
+        );
+      })}
+    </div>
+  </div>
+)}
 
       {/* MAP */}
       {tab === "map" && <MapView
