@@ -237,6 +237,14 @@ async function moveCustomerToDate(
 
   return d;
 });
+const monthDays = Array.from({ length: 30 }).map((_, i) => {
+  const d = new Date();
+  d.setDate(d.getDate() + i);
+
+  const calendarDays =
+  calendarView === "week" ? weekDays : monthDays;
+  return d;
+});
 
   /* ---------------- METRICS ---------------- */
   const revenue = customers
@@ -568,7 +576,7 @@ async function moveCustomerToDate(
 
     {/* GRID */}
     <div style={weekStyles.grid}>
-      {weekDays.map((day, i) => {
+      {calendarDays.map((day, i) => {
         const key = getDateKey(day);
         const jobs = customers.filter((c) => c.date === key);
         const isToday = key === getDateKey(new Date());
