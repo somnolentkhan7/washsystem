@@ -218,8 +218,9 @@ async function moveCustomerToDate(
 });
 const monthDays = Array.from({ length: 35 }).map((_, i) => {
   const d = new Date();
-  const day = d.getDay();
-  d.setDate(d.getDate() - day + weekOffset * 7 + i);
+  d.setDate(1); // go to first of month
+  const firstDayOfWeek = d.getDay(); // what weekday the 1st falls on
+  d.setDate(1 - firstDayOfWeek + i); // start from that Sunday
   return d;
 });
 
