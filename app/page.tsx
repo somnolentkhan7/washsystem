@@ -25,6 +25,7 @@ type Customer = {
   upsells?: string[];
 };
 
+
 /* ---------------- CONSTANTS ---------------- */
 const HOME = { lat: 30.20320, lng: -97.85231 };
 const SERVICES = ["Driveway", "Sidewalk", "Patio", "Trashcans"];
@@ -846,3 +847,4 @@ const weekStyles: any = {
   header: { fontSize: 12, fontWeight: 600, marginBottom: 8 },
   job: { background: "#f5f5f5", padding: 6, borderRadius: 8, marginBottom: 6 },
 };
+

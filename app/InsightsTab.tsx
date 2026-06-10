@@ -253,8 +253,7 @@ const statRowStyle = {
         ) : (
           <ResponsiveContainer
   width="100%"
-  height={isMobile ? 180 : 220}
->
+    height={isMobile ? 80 : 300}>
             <BarChart data={revenueData} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
