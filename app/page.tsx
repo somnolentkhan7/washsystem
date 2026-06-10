@@ -231,10 +231,6 @@ const monthDays = Array.from({ length: 30 }).map((_, i) => {
   const pending = customers.length - completed;
   const calendarDays = calendarView === "week" ? weekDays : monthDays;
 
-return (
-    <main style={styles.page}></main>
-
-
 
 
   /* ---------------- UI ---------------- */
