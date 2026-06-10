@@ -358,27 +358,167 @@ function Card({ title, value }: any) {
 
 /* ---------------- STYLES ---------------- */
 const styles: any = {
-  page: { padding: 20, background: "#f5f5f7", minHeight: "100vh" },
-  header: { marginBottom: 18 },
-  title: { fontSize: 24, fontWeight: 600 },
-  tabs: { display: "flex", gap: 10, marginBottom: 18 },
-  tab: { padding: 8, borderRadius: 10, background: "#eee" },
-  activeTab: { padding: 8, borderRadius: 10, background: "#000", color: "#fff" },
-  grid: { display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 },
-  cardBox: { padding: 16, background: "#fff", borderRadius: 12 },
-  cardTitle: { fontSize: 12 },
-  cardValue: { fontSize: 20, fontWeight: 600 },
-  card: { padding: 16, background: "#fff", borderRadius: 12, marginBottom: 12 },
-  input: { width: "100%", padding: 10, marginBottom: 8 },
-  addBtn: { padding: 10, background: "#000", color: "#fff", width: "100%" },
-  filters: { display: "flex", gap: 10, marginBottom: 10 },
-  filter: { padding: 6, background: "#eee" },
-  activeFilter: { padding: 6, background: "#000", color: "#fff" },
-  item: { padding: 12, background: "#fff", marginBottom: 8 },
-  name: { fontWeight: 600 },
-  sub: { opacity: 0.6 },
-  price: { marginTop: 4 },
-  row: { display: "flex", gap: 10, marginTop: 8 },
+  page: {
+    padding: 24,
+    background: "#f4f4f6",
+    minHeight: "100vh",
+    fontFamily:
+      "-apple-system, BlinkMacSystemFont, SF Pro Display, SF Pro Text, Inter, sans-serif",
+    color: "#1d1d1f",
+    maxWidth: 980,
+    margin: "0 auto",
+  },
+
+  header: {
+    marginBottom: 18,
+  },
+
+  title: {
+    fontSize: 26,
+    fontWeight: 700,
+    letterSpacing: -0.5,
+  },
+
+  tabs: {
+    display: "flex",
+    gap: 10,
+    marginBottom: 18,
+    flexWrap: "wrap",
+  },
+
+  tab: {
+    padding: "8px 14px",
+    borderRadius: 999,
+    border: "1px solid rgba(0,0,0,0.08)",
+    background: "#fff",
+    fontSize: 13,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+
+  activeTab: {
+    padding: "8px 14px",
+    borderRadius: 999,
+    border: "1px solid #1d1d1f",
+    background: "#1d1d1f",
+    color: "#fff",
+    fontSize: 13,
+    cursor: "pointer",
+  },
+
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 14,
+  },
+
+  cardBox: {
+    background: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    border: "1px solid rgba(0,0,0,0.06)",
+    boxShadow: "0 6px 18px rgba(0,0,0,0.04)",
+  },
+
+  cardTitle: {
+    fontSize: 12,
+    opacity: 0.6,
+    marginBottom: 6,
+  },
+
+  cardValue: {
+    fontSize: 22,
+    fontWeight: 600,
+  },
+
+  card: {
+    background: "#fff",
+    borderRadius: 18,
+    padding: 18,
+    border: "1px solid rgba(0,0,0,0.06)",
+    boxShadow: "0 6px 18px rgba(0,0,0,0.04)",
+    marginBottom: 14,
+  },
+
+  input: {
+    width: "100%",
+    padding: 12,
+    marginBottom: 10,
+    borderRadius: 12,
+    border: "1px solid rgba(0,0,0,0.08)",
+    background: "#fafafa",
+    fontSize: 14,
+    outline: "none",
+  },
+
+  addBtn: {
+    width: "100%",
+    padding: 12,
+    borderRadius: 12,
+    background: "#1d1d1f",
+    color: "white",
+    border: "none",
+    fontWeight: 500,
+    cursor: "pointer",
+    marginTop: 6,
+  },
+
+  filters: {
+    display: "flex",
+    gap: 8,
+    marginBottom: 12,
+    flexWrap: "wrap",
+  },
+
+  filter: {
+    padding: "7px 12px",
+    borderRadius: 999,
+    border: "1px solid rgba(0,0,0,0.08)",
+    background: "#fff",
+    fontSize: 12,
+    cursor: "pointer",
+  },
+
+  activeFilter: {
+    padding: "7px 12px",
+    borderRadius: 999,
+    background: "#1d1d1f",
+    color: "white",
+    fontSize: 12,
+    cursor: "pointer",
+    border: "1px solid #1d1d1f",
+  },
+
+  item: {
+    background: "#fff",
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 10,
+    border: "1px solid rgba(0,0,0,0.06)",
+    boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
+  },
+
+  name: {
+    fontWeight: 600,
+    fontSize: 15,
+  },
+
+  sub: {
+    opacity: 0.6,
+    fontSize: 13,
+    marginTop: 2,
+  },
+
+  price: {
+    marginTop: 6,
+    fontWeight: 600,
+  },
+
+  row: {
+    display: "flex",
+    gap: 10,
+    marginTop: 10,
+  },
 };
 
 const weekStyles: any = {
