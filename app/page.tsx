@@ -595,7 +595,7 @@ const { error } = await supabase.from("customers").insert([{
         </div>
       )}
 
-      {tab === "insights" && <InsightsTab customers={customers} isMobile={isMobile} />}
+      {tab === "insights" && <InsightsTab customers={customers} />}
 
       {/* MAP */}
       {tab === "map" && <div
