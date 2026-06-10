@@ -402,16 +402,16 @@ async function moveCustomerToDate(
                 <div style={styles.name}>{c.name}</div>
                 <div style={styles.sub}>{c.address}</div>
                 {c.services?.length > 0 && (
-                    <div style={{ fontSize: 12, opacity: 0.6 }}>
-                      Services: {c.services.join(", ")}
-                    </div>
-                  )}
+                  <div style={{ fontSize: 12, opacity: 0.6 }}>
+                    Services: {c.services.join(", ")}
+                  </div>
+                )}
 
-                  {c.notes && (
-                    <div style={{ fontSize: 12, opacity: 0.5, marginTop: 4 }}>
-                      Notes: {c.notes}
-                    </div>
-                  )}
+                {c.notes && (
+                  <div style={{ fontSize: 12, opacity: 0.5, marginTop: 4 }}>
+                    Notes: {c.notes}
+                  </div>
+                )}
                 <div style={styles.price}>${c.price}</div>
 
                 <div style={styles.row}>
