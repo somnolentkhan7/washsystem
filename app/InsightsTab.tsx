@@ -14,7 +14,7 @@ function useIsMobile(breakpoint = 768) {
 
     const update = () => setIsMobile(media.matches);
 
-    update(); // run once immediately
+    update();
 
     media.addEventListener("change", update);
 
@@ -56,9 +56,35 @@ function formatMonthLabel(dateStr: string) {
   return new Date(Number(year), Number(month) - 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
 }
 
+function SwipeRow({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        overflowX: "auto",
+        gap: 12,
+        paddingBottom: 8,
+        scrollSnapType: "x mandatory",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 /* ---------------- COMPONENT ---------------- */
-export default function InsightsTab({ customers }: { customers: Customer[] }) {
+export default function InsightsTab({
+  customers,
+}: {
+  customers: Customer[];
+}) {
     const isMobile = useIsMobile();
+    const cardStyle = {
+  ...s.card,
+  padding: isMobile ? 14 : 18,
+  marginBottom: isMobile ? 12 : 16,
+};
   const [revenueView, setRevenueView] = useState<"month" | "week">("month");
 
   const completed = useMemo(() => customers.filter((c) => c.completed && c.paid && c.date), [customers]);
@@ -197,13 +223,37 @@ const statRowStyle = {
   return (
     <div>
       {/* SUMMARY ROW */}
-      <div style={statRowStyle}>
-        <StatBox label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} />
-        <StatBox label="Jobs Completed" value={completed.length} />
-        <StatBox label="Avg Job Value" value={`$${avgValue}`} />
-        <StatBox label="Unpaid Revenue" value={`$${unpaidRevenue}`} />
-        <StatBox label="Upsell Rate" value={`${upsellRate}%`} />    
-      </div>
+      {isMobile ? (
+  <SwipeRow>
+    <div style={{ minWidth: 220, flexShrink: 0 }}>
+      <StatBox label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} />
+    </div>
+
+    <div style={{ minWidth: 220, flexShrink: 0 }}>
+      <StatBox label="Jobs Completed" value={completed.length} />
+    </div>
+
+    <div style={{ minWidth: 220, flexShrink: 0 }}>
+      <StatBox label="Avg Job Value" value={`$${avgValue}`} />
+    </div>
+
+    <div style={{ minWidth: 220, flexShrink: 0 }}>
+      <StatBox label="Unpaid Revenue" value={`$${unpaidRevenue}`} />
+    </div>
+
+    <div style={{ minWidth: 220, flexShrink: 0 }}>
+      <StatBox label="Upsell Rate" value={`${upsellRate}%`} />
+    </div>
+  </SwipeRow>
+) : (
+  <div style={statRowStyle}>
+    <StatBox label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} />
+    <StatBox label="Jobs Completed" value={completed.length} />
+    <StatBox label="Avg Job Value" value={`$${avgValue}`} />
+    <StatBox label="Unpaid Revenue" value={`$${unpaidRevenue}`} />
+    <StatBox label="Upsell Rate" value={`${upsellRate}%`} />
+  </div>
+)}
 
       {/* BEST DAY / BEST WEEK */}
       <div style={statRowStyle}>
@@ -230,7 +280,7 @@ const statRowStyle = {
       </div>
 
       {/* REVENUE CHART */}
-      <div style={s.card}>
+      <div style={cardStyle}>
         <div style={s.cardHeader}>
           <h3 style={s.cardTitle}>Revenue</h3>
           <div style={s.toggle}>
@@ -253,7 +303,8 @@ const statRowStyle = {
         ) : (
           <ResponsiveContainer
   width="100%"
-    height={isMobile ? 80 : 300}>
+  height={isMobile ? 180 : 220}
+>
             <BarChart data={revenueData} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
@@ -266,7 +317,7 @@ const statRowStyle = {
       </div>
 
       {/* AVG JOB VALUE CHART */}
-      <div style={s.card}>
+      <div style={cardStyle}>
         <div style={s.cardHeader}>
           <h3 style={s.cardTitle}>Average Job Value Over Time</h3>
         </div>
@@ -286,7 +337,7 @@ const statRowStyle = {
       </div>
 
       {/* SERVICES BREAKDOWN */}
-      <div style={s.card}>
+      <div style={cardStyle}>
         <div style={s.cardHeader}>
           <h3 style={s.cardTitle}>Most Popular Services</h3>
         </div>
@@ -314,7 +365,7 @@ const statRowStyle = {
           </>
         )}
       </div>
-      <div style={s.card}>
+      <div style={cardStyle}>
   <div style={s.cardHeader}>
     <h3 style={s.cardTitle}>Payment Methods</h3>
   </div>
@@ -372,13 +423,12 @@ const s: any = {
   highlightSub: { fontSize: 12, opacity: 0.55 },
 
   card: {
-    background: "#fff",
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 16,
-    boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
-    border: "1px solid rgba(0,0,0,0.04)",
-  },
+  background: "#fff",
+  borderRadius: 16,
+  boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+  border: "1px solid rgba(0,0,0,0.04)",
+},
+
   cardHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
   cardTitle: { margin: 0, fontSize: 16, fontWeight: 600 },
   chartEmpty: { fontSize: 13, opacity: 0.45, padding: "20px 0" },

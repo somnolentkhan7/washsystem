@@ -82,8 +82,16 @@ function calcArrivalTimes(jobs: Customer[], startTime: string) {
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
-  const [calendarView, setCalendarView] = useState<"week" | "month">("week");
   const [isMobile, setIsMobile] = useState(false);
+
+useEffect(() => {
+  const check = () => setIsMobile(window.innerWidth < 768);
+  check();
+  window.addEventListener("resize", check);
+  return () => window.removeEventListener("resize", check);
+}, []);
+  const [calendarView, setCalendarView] = useState<"week" | "month">("week");
+
 
 useEffect(() => {
   const checkMobile = () => {
@@ -587,7 +595,7 @@ const { error } = await supabase.from("customers").insert([{
         </div>
       )}
 
-      {tab === "insights" && <InsightsTab customers={customers} />}
+      {tab === "insights" && <InsightsTab customers={customers} isMobile={isMobile} />}
 
       {/* MAP */}
       {tab === "map" && <div
@@ -838,13 +846,13 @@ const calBtn = { padding: "6px 12px", borderRadius: 10, border: "1px solid #e5e7
 const calBtnPrimary = { padding: "6px 12px", borderRadius: 10, border: "1px solid #111", background: "#111", color: "#fff", fontSize: 12, cursor: "pointer" };
 
 const weekStyles: any = {
-  grid: { display: "grid", 
-  gridTemplateColumns: typeof window !== "undefined" &&
-  window.innerWidth < 768
-    ? "1fr"
-    : "repeat(7, minmax(120px, 1fr))", overflowX: "auto", gap: 8 },
+  grid: {
+  display: "grid",
+  gridTemplateColumns: "repeat(7, minmax(120px, 1fr))",
+overflowX: "auto",
+  gap: 8,
+  },
   day: { background: "#fff", padding: 10, borderRadius: 10, minHeight: 180 },
   header: { fontSize: 12, fontWeight: 600, marginBottom: 8 },
   job: { background: "#f5f5f5", padding: 6, borderRadius: 8, marginBottom: 6 },
 };
-
