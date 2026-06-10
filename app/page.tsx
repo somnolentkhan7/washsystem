@@ -653,6 +653,33 @@ const { error } = await supabase.from("customers").insert([{
               <div>📞 <strong>Phone:</strong> {selectedCustomer.phone || "No phone"}</div>
               <div>🧼 <strong>Service:</strong> {selectedCustomer.services?.length ? selectedCustomer.services.join(", ") : "No service selected"}</div>
               <div>💵 <strong>Price:</strong> ${selectedCustomer.price}</div>
+              <button
+  onClick={async () => {
+    const res = await fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: selectedCustomer.price,
+      }),
+    });
+
+    const data = await res.json();
+    window.location.href = data.url;
+  }}
+  style={{
+    width: "100%",
+    padding: "10px 12px",
+    marginTop: 10,
+    background: "#16a34a",
+    color: "#fff",
+    borderRadius: 10,
+    border: "none",
+    fontWeight: 600,
+    cursor: "pointer",
+  }}
+>
+  💳 Take Payment
+</button>
               <div>📊 <strong>Status:</strong> {selectedCustomer.completed ? "Completed" : "Pending"}</div>
               <div style={{ marginTop: 12 }}>
   <strong>💰 Payment</strong>
