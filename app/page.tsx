@@ -22,14 +22,6 @@ type Customer = {
 /* ---------------- HELPERS ---------------- */
 const getDateKey = (date: Date) => date.toISOString().split("T")[0];
 
-const getStartOfWeek = (date = new Date(), offset = 0) => {
-  const start = new Date(date);
-  const day = start.getDay();
-  start.setDate(start.getDate() - day + offset * 7);
-  start.setHours(0, 0, 0, 0);
-  return start;
-};
-
 /* ---------------- PAGE ---------------- */
 export default function Home() {
   const [tab, setTab] = useState<
@@ -165,12 +157,12 @@ export default function Home() {
     }));
   }
 
-  /* ---------------- WEEK CALENDAR ---------------- */
+  /* ---------------- CALENDAR ---------------- */
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
-    const start = getStartOfWeek(new Date(), weekOffset);
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    return d;
+    const start = new Date();
+    const day = start.getDay();
+    start.setDate(start.getDate() - day + weekOffset * 7 + i);
+    return start;
   });
 
   /* ---------------- METRICS ---------------- */
@@ -312,7 +304,6 @@ export default function Home() {
           <div style={weekStyles.grid}>
             {weekDays.map((day, i) => {
               const key = getDateKey(day);
-
               const jobs = customers.filter((c) => c.date === key);
 
               return (
@@ -369,14 +360,11 @@ const styles: any = {
     margin: "0 auto",
   },
 
-  header: {
-    marginBottom: 18,
-  },
+  header: { marginBottom: 18 },
 
   title: {
     fontSize: 26,
     fontWeight: 700,
-    letterSpacing: -0.5,
   },
 
   tabs: {
@@ -393,13 +381,11 @@ const styles: any = {
     background: "#fff",
     fontSize: 13,
     cursor: "pointer",
-    transition: "all 0.2s ease",
   },
 
   activeTab: {
     padding: "8px 14px",
     borderRadius: 999,
-    border: "1px solid #1d1d1f",
     background: "#1d1d1f",
     color: "#fff",
     fontSize: 13,
@@ -417,26 +403,17 @@ const styles: any = {
     borderRadius: 16,
     padding: 16,
     border: "1px solid rgba(0,0,0,0.06)",
-    boxShadow: "0 6px 18px rgba(0,0,0,0.04)",
   },
 
-  cardTitle: {
-    fontSize: 12,
-    opacity: 0.6,
-    marginBottom: 6,
-  },
+  cardTitle: { fontSize: 12, opacity: 0.6, marginBottom: 6 },
 
-  cardValue: {
-    fontSize: 22,
-    fontWeight: 600,
-  },
+  cardValue: { fontSize: 22, fontWeight: 600 },
 
   card: {
     background: "#fff",
     borderRadius: 18,
     padding: 18,
     border: "1px solid rgba(0,0,0,0.06)",
-    boxShadow: "0 6px 18px rgba(0,0,0,0.04)",
     marginBottom: 14,
   },
 
@@ -446,47 +423,33 @@ const styles: any = {
     marginBottom: 10,
     borderRadius: 12,
     border: "1px solid rgba(0,0,0,0.08)",
-    background: "#fafafa",
-    fontSize: 14,
-    outline: "none",
   },
 
   addBtn: {
     width: "100%",
     padding: 12,
-    borderRadius: 12,
     background: "#1d1d1f",
-    color: "white",
+    color: "#fff",
+    borderRadius: 12,
     border: "none",
-    fontWeight: 500,
-    cursor: "pointer",
-    marginTop: 6,
   },
 
-  filters: {
-    display: "flex",
-    gap: 8,
-    marginBottom: 12,
-    flexWrap: "wrap",
-  },
+  filters: { display: "flex", gap: 8, marginBottom: 12 },
 
   filter: {
     padding: "7px 12px",
     borderRadius: 999,
-    border: "1px solid rgba(0,0,0,0.08)",
     background: "#fff",
+    border: "1px solid rgba(0,0,0,0.08)",
     fontSize: 12,
-    cursor: "pointer",
   },
 
   activeFilter: {
     padding: "7px 12px",
     borderRadius: 999,
     background: "#1d1d1f",
-    color: "white",
+    color: "#fff",
     fontSize: 12,
-    cursor: "pointer",
-    border: "1px solid #1d1d1f",
   },
 
   item: {
@@ -494,31 +457,15 @@ const styles: any = {
     borderRadius: 14,
     padding: 14,
     marginTop: 10,
-    border: "1px solid rgba(0,0,0,0.06)",
-    boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
   },
 
-  name: {
-    fontWeight: 600,
-    fontSize: 15,
-  },
+  name: { fontWeight: 600 },
 
-  sub: {
-    opacity: 0.6,
-    fontSize: 13,
-    marginTop: 2,
-  },
+  sub: { opacity: 0.6, fontSize: 13 },
 
-  price: {
-    marginTop: 6,
-    fontWeight: 600,
-  },
+  price: { marginTop: 6, fontWeight: 600 },
 
-  row: {
-    display: "flex",
-    gap: 10,
-    marginTop: 10,
-  },
+  row: { display: "flex", gap: 10, marginTop: 10 },
 };
 
 const weekStyles: any = {
