@@ -26,6 +26,7 @@ console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   const [directions, setDirections] = useState<any>(null);
   const [tab, setTab] = useState<"dashboard" | "jobs" | "map" | "calendar">("dashboard");
+  const [weekOffset, setWeekOffset] = useState(0);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">(
     "all"
@@ -217,6 +218,28 @@ useEffect(() => {
 
 
   /* ---------------- METRICS ---------------- */
+  const getStartOfWeek = (date = new Date(), offset = 0) => {
+  const start = new Date(date);
+  const day = start.getDay();
+
+  const diff = start.getDate() - day + offset * 7;
+  start.setDate(diff);
+  start.setHours(0, 0, 0, 0);
+
+  return start;
+};
+
+const getDateKey = (date: Date) => {
+  return date.toISOString().split("T")[0];
+};
+
+const weekDays = Array.from({ length: 7 }).map((_, i) => {
+  const start = getStartOfWeek(new Date(), weekOffset);
+  const d = new Date(start);
+  d.setDate(start.getDate() + i);
+  return d;
+});
+
 const groupedByDate = customers.reduce((acc: any, customer) => {
   if (!customer.date) return acc;
 
@@ -231,9 +254,26 @@ const groupedByDate = customers.reduce((acc: any, customer) => {
   const revenue = customers
     .filter((c) => c.completed)
     .reduce((sum, c) => sum + c.price, 0);
-
   const completed = customers.filter((c) => c.completed).length;
   const pending = customers.length - completed;
+  const getStartOfWeek = (date = new Date()) => {
+  const start = new Date(date);
+  const day = start.getDay(); // 0 = Sunday
+  start.setDate(start.getDate() - day);
+  start.setHours(0, 0, 0, 0);
+  return start;
+};
+
+const getDateKey = (date: Date) => {
+  return date.toISOString().split("T")[0];
+};
+
+const weekDays = Array.from({ length: 7 }).map((_, i) => {
+  const start = getStartOfWeek();
+  const d = new Date(start);
+  d.setDate(start.getDate() + i);
+  return d;
+});
 
 
   /* ---------------- UI ---------------- */
@@ -391,37 +431,55 @@ const groupedByDate = customers.reduce((acc: any, customer) => {
 {tab === "calendar" && (
   <div>
     <div style={styles.card}>
-      <h3>Calendar</h3>
+      <h3>Weekly Calendar</h3>
       <p style={{ opacity: 0.6 }}>
-        All scheduled jobs by date
+        Your scheduled jobs for this week
       </p>
     </div>
 
-    {Object.keys(groupedByDate)
-      .sort()
-      .map((date) => (
-        <div key={date} style={styles.card}>
-          <h4 style={{ marginBottom: 10 }}>{date}</h4>
+    <div style={weekStyles.grid}>
+      {weekDays.map((day, i) => {
+        const key = getDateKey(day);
 
-          {groupedByDate[date].map((c: Customer) => (
-            <div key={c.id} style={styles.item}>
-              <div style={styles.name}>{c.name}</div>
-              <div style={styles.sub}>{c.address}</div>
-              <div style={styles.price}>${c.price}</div>
+        const jobsForDay = customers.filter(
+          (c) => c.date === key
+        );
 
-              <div style={styles.row}>
-                <button onClick={() => toggleComplete(c)}>
-                  {c.completed ? "Undo" : "Complete"}
-                </button>
-
-                <button onClick={() => deleteCustomer(c.id)}>
-                  Delete
-                </button>
-              </div>
+        return (
+          <div key={i} style={weekStyles.day}>
+            <div style={weekStyles.header}>
+              {day.toLocaleDateString("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              })}
             </div>
-          ))}
-        </div>
-      ))}
+
+            {jobsForDay.length === 0 ? (
+              <div style={{ opacity: 0.4 }}>No jobs</div>
+            ) : (
+              jobsForDay.map((c) => (
+                <div key={c.id} style={weekStyles.job}>
+                  <div style={{ fontWeight: 600 }}>{c.name}</div>
+                  <div style={{ fontSize: 12, opacity: 0.6 }}>
+                    {c.address}
+                  </div>
+                  <div style={{ fontSize: 12 }}>
+                    ${c.price}
+                  </div>
+
+                  <div style={{ marginTop: 5 }}>
+                    <button onClick={() => toggleComplete(c)}>
+                      {c.completed ? "Undo" : "Complete"}
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        );
+      })}
+    </div>
   </div>
 )}
 
@@ -638,4 +696,35 @@ const styles: any = {
     marginTop: 12,
     flexWrap: "wrap",
   },
+
+  const weekStyles: any = {
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(7, 1fr)",
+    gap: 10,
+    marginTop: 20,
+  },
+
+  day: {
+    background: "rgba(255,255,255,0.9)",
+    border: "1px solid rgba(0,0,0,0.06)",
+    borderRadius: 16,
+    padding: 10,
+    minHeight: 220,
+  },
+
+  header: {
+    fontWeight: 600,
+    fontSize: 12,
+    marginBottom: 10,
+    opacity: 0.7,
+  },
+
+  job: {
+    background: "#f5f5f7",
+    padding: 8,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+};
 };
