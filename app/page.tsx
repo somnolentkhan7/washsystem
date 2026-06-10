@@ -515,7 +515,7 @@ const isMobile =
 const styles: any = {
   page: {
     padding: "clamp(12px, 3vw, 24px)",
-    background: "#f4f4f6",
+    background: "#f2f4f7",
     minHeight: "100vh",
     fontFamily:
       "-apple-system, BlinkMacSystemFont, SF Pro Display, SF Pro Text, Inter, sans-serif",
@@ -576,12 +576,13 @@ const styles: any = {
   cardValue: { fontSize: 22, fontWeight: 600 },
 
   card: {
-    background: "#fff",
-    borderRadius: 18,
-    padding: 18,
-    border: "1px solid rgba(0,0,0,0.06)",
-    marginBottom: 14,
-  },
+  background: "#fff",
+  borderRadius: 16,
+  padding: 18,
+  marginBottom: 16,
+  boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+  border: "1px solid rgba(0,0,0,0.04)",
+}, 
 
   input: {
     width: "100%",
@@ -603,37 +604,45 @@ const styles: any = {
   filters: { display: "flex", gap: 8, marginBottom: 12 },
 
   filter: {
-    padding: "7px 12px",
-    borderRadius: 999,
-    background: "#fff",
-    border: "1px solid rgba(0,0,0,0.08)",
-    fontSize: 12,
-  },
+  padding: "7px 12px",
+  borderRadius: 999,
+  background: "#f5f5f5",
+  border: "1px solid rgba(0,0,0,0.06)",
+  fontSize: 12,
+  cursor: "pointer",
+},
 
   activeFilter: {
-    padding: "7px 12px",
-    borderRadius: 999,
-    background: "#1d1d1f",
-    color: "#fff",
-    fontSize: 12,
-  },
+  padding: "7px 12px",
+  borderRadius: 999,
+  background: "#111",
+  color: "#fff",
+  fontSize: 12,
+},
 
   draggingItem: {
     opacity: 0.5,
     transform: "scale(0.98)",
   },
 
-  item: {
-    background: "#fff",
-    padding: "14px 14px 16px",
-    marginTop: 10,
-    borderRadius: 14,
-    touchAction: "manipulation",
-  },
+ item: {
+  background: "#fafafa",
+  padding: "12px 14px",
+  marginTop: 10,
+  borderRadius: 12,
+  border: "1px solid rgba(0,0,0,0.05)",
+},
 
-  name: { fontWeight: 600 },
+  name: {
+  fontWeight: 600,
+  fontSize: 15,
+},
 
-  sub: { opacity: 0.6, fontSize: 13 },
+sub: {
+  opacity: 0.6,
+  fontSize: 13,
+  marginTop: 2,
+},
 
   price: { marginTop: 6, fontWeight: 600 },
 
