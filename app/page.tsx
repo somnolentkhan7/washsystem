@@ -82,7 +82,20 @@ function calcArrivalTimes(jobs: Customer[], startTime: string) {
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
-  const [isMobile, setIsMobile] = useState(false);
+const [isMobile, setIsMobile] = useState(false);
+const weekStyles: any = {
+  grid: {
+  display: "grid",
+  gridTemplateColumns: isMobile ? "1fr" : "repeat(7, minmax(120px, 1fr))",
+overflowX: "auto",
+  gap: 8,
+  },
+  day: { background: "#fff", padding: 10, borderRadius: 10, minHeight: 180 },
+  header: { fontSize: 12, fontWeight: 600, marginBottom: 8 },
+  job: { background: "#f5f5f5", padding: 6, borderRadius: 8, marginBottom: 6 },
+};
+
+  
 
 useEffect(() => {
   const check = () => setIsMobile(window.innerWidth < 768);
@@ -819,18 +832,20 @@ const styles: any = {
   title: { fontSize: 26, fontWeight: 700 },
   tabs: {
   display: "flex",
-  gap: 10,
-  marginBottom: 18,
-  flexWrap: "nowrap",
+  gap: 8,
   overflowX: "auto",
   WebkitOverflowScrolling: "touch",
-  scrollbarWidth: "none",
 
   position: "sticky",
   top: 0,
   zIndex: 100,
-  background: "#f2f4f7",
-  padding: "10px 0",
+
+  background: "rgba(242, 244, 247, 0.9)",
+  backdropFilter: "blur(10px)",
+
+  padding: "10px 8px",
+  marginBottom: 18,
+  borderRadius: 14,
 },
   tab: {
   padding: "8px 14px",
@@ -839,6 +854,7 @@ const styles: any = {
   background: "#fff",
   fontSize: 13,
   cursor: "pointer",
+  
 
   whiteSpace: "nowrap",
   flexShrink: 0,
@@ -879,14 +895,4 @@ const styles: any = {
 const calBtn = { padding: "6px 12px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer" };
 const calBtnPrimary = { padding: "6px 12px", borderRadius: 10, border: "1px solid #111", background: "#111", color: "#fff", fontSize: 12, cursor: "pointer" };
 
-const weekStyles: any = {
-  grid: {
-  display: "grid",
-  gridTemplateColumns: "repeat(7, minmax(120px, 1fr))",
-overflowX: "auto",
-  gap: 8,
-  },
-  day: { background: "#fff", padding: 10, borderRadius: 10, minHeight: 180 },
-  header: { fontSize: 12, fontWeight: 600, marginBottom: 8 },
-  job: { background: "#f5f5f5", padding: 6, borderRadius: 8, marginBottom: 6 },
-};
+
