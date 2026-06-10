@@ -5,18 +5,20 @@ import { useMemo, useState, useEffect } from "react";import {
   ResponsiveContainer, LineChart, Line, CartesianGrid,
 } from "recharts";
 
+
 function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(
-  typeof window !== "undefined" ? window.innerWidth < breakpoint : false
-);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < breakpoint);
+    const media = window.matchMedia(`(max-width: ${breakpoint}px)`);
 
-    check();
-    window.addEventListener("resize", check);
+    const update = () => setIsMobile(media.matches);
 
-    return () => window.removeEventListener("resize", check);
+    update(); // run once immediately
+
+    media.addEventListener("change", update);
+
+    return () => media.removeEventListener("change", update);
   }, [breakpoint]);
 
   return isMobile;
