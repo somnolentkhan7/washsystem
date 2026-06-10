@@ -251,6 +251,17 @@ async function moveCustomerToDate(
           <div key={c.id} style={styles.item}>
             <div style={styles.name}>{c.name}</div>
             <div style={styles.sub}>{c.address}</div>
+            {c.services?.length > 0 && (
+  <div style={{ fontSize: 12, opacity: 0.6 }}>
+    Services: {c.services.join(", ")}
+  </div>
+)}
+
+{c.notes && (
+  <div style={{ fontSize: 12, opacity: 0.5, marginTop: 4 }}>
+    Notes: {c.notes}
+  </div>
+)}
           </div>
         ))
       )}
