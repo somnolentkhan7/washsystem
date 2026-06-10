@@ -214,59 +214,64 @@ async function moveCustomerToDate(
       </div>
 
       {/* DASHBOARD */}
+
+      
       {tab === "dashboard" && (
         const todayKey = getDateKey(new Date());
 
-          const todayJobs = customers.filter(
-            (c) => c.date === todayKey
-          );
-          <div style={styles.card}>
-            <h3>Today’s Jobs</h3>
+const todayJobs = customers.filter(
+  (c) => c.date === todayKey
+);
 
-            {todayJobs.length === 0 ? (
-              <p style={{ opacity: 0.5 }}>No jobs today</p>
-            ) : (
-              todayJobs.map((c) => (
-                <div key={c.id} style={styles.item}>
-                  <div style={styles.name}>{c.name}</div>
-                  <div style={styles.sub}>{c.address}</div>
-                </div>
-              ))
-            )}
+function getRoute(jobs: Customer[]) {
+  return [...jobs].sort((a, b) => {
+    if (!a.lat || !b.lat) return 0;
+    return a.lat - b.lat;
+  });
+}
+
+const routeJobs = getRoute(todayJobs);
+  <>
+    <div style={styles.card}>
+      <h3>Today’s Jobs</h3>
+
+      {todayJobs.length === 0 ? (
+        <p style={{ opacity: 0.5 }}>No jobs today</p>
+      ) : (
+        todayJobs.map((c) => (
+          <div key={c.id} style={styles.item}>
+            <div style={styles.name}>{c.name}</div>
+            <div style={styles.sub}>{c.address}</div>
           </div>
-
-        function getRoute(jobs: Customer[]) {
-            return [...jobs].sort((a, b) => {
-              if (!a.lat || !b.lat) return 0;
-              return a.lat - b.lat;
-            });
-          }
-          const routeJobs = getRoute(todayJobs);
-
-          <div style={styles.card}>
-            <h3>Route Order</h3>
-
-            {routeJobs.length === 0 ? (
-              <p style={{ opacity: 0.5 }}>No route</p>
-            ) : (
-              routeJobs.map((c, i) => (
-                <div key={c.id} style={styles.item}>
-                  <div style={styles.name}>
-                    {i + 1}. {c.name}
-                  </div>
-                  <div style={styles.sub}>{c.address}</div>
-                </div>
-              ))
-            )}
-          </div>
-
-        <div style={styles.grid}>
-          <Card title="Total Jobs" value={customers.length} />
-          <Card title="Completed" value={completed} />
-          <Card title="Pending" value={pending} />
-          <Card title="Revenue" value={`$${revenue}`} />
-        </div>
+        ))
       )}
+    </div>
+
+    <div style={styles.card}>
+      <h3>Route Order</h3>
+
+      {routeJobs.length === 0 ? (
+        <p style={{ opacity: 0.5 }}>No route</p>
+      ) : (
+        routeJobs.map((c, i) => (
+          <div key={c.id} style={styles.item}>
+            <div style={styles.name}>
+              {i + 1}. {c.name}
+            </div>
+            <div style={styles.sub}>{c.address}</div>
+          </div>
+        ))
+      )}
+    </div>
+
+    <div style={styles.grid}>
+      <Card title="Total Jobs" value={customers.length} />
+      <Card title="Completed" value={completed} />
+      <Card title="Pending" value={pending} />
+      <Card title="Revenue" value={`$${revenue}`} />
+    </div>
+  </>
+)}
 
       {/* JOBS */}
       {tab === "jobs" && (
