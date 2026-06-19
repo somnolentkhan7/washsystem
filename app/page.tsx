@@ -40,7 +40,7 @@ function formatPhone(value: string) {
   const [, area, first, second] = match;
   if (second) return `(${area}) ${first}-${second}`;
   if (first) return `(${area}) ${first}`;
-  if (area) return `(${area}`;
+  if (area) return `(${area})`;
   return value;
 }
 
@@ -207,161 +207,289 @@ function AddressInput({
 }
 
 function ProductivityTab() {
+  const [now, setNow] = useState(new Date());
+
+  /* LIVE CLOCK */
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 30 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const currentDay = now.toLocaleDateString("en-US", {
+    weekday: "long",
+  });
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  /* DAY PROGRESS (9am → 8pm) */
+  const DAY_START = 9 * 60;
+  const DAY_END = 20 * 60;
+
+  const progress =
+    Math.min(
+      Math.max((currentMinutes - DAY_START) / (DAY_END - DAY_START), 0),
+      1
+    ) * 100;
+
+  /* ACTIVE BLOCK LOGIC */
+  const getCurrentBlock = () => {
+    if (currentMinutes >= 9 * 60 && currentMinutes < 13 * 60) return "wash";
+    if (currentMinutes >= 13 * 60 && currentMinutes < 15.5 * 60) return "reset";
+    if (currentMinutes >= 16 * 60 && currentMinutes < 20 * 60) return "sales";
+    return null;
+  };
+
+  const activeBlock = getCurrentBlock();
+
+  /* MODE LABEL (ALWAYS VALID) */
+  const productionIntensity =
+    activeBlock === "wash"
+      ? "HIGH OUTPUT MODE"
+      : activeBlock === "sales"
+      ? "REVENUE HUNT MODE"
+      : activeBlock === "reset"
+      ? "RECOVERY MODE"
+      : "OFF-SEASON MODE";
+
   const weekSchedule = [
     {
       day: "Monday",
       blocks: [
-        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼" },
-        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️" },
-        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪" },
+        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" },
+        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" },
+        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" },
       ],
     },
     {
       day: "Tuesday",
       blocks: [
-        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼" },
-        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️" },
-        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪" },
+        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" },
+        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" },
+        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" },
       ],
     },
     {
       day: "Wednesday",
       blocks: [
-        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼" },
-        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️" },
-        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪" },
+        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" },
+        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" },
+        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" },
       ],
     },
     {
       day: "Thursday",
       blocks: [
-        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼" },
-        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️" },
-        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪" },
+        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" },
+        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" },
+        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" },
       ],
     },
     {
       day: "Friday",
       blocks: [
-        { time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰" },
+        { time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰", key: "wash" },
       ],
     },
     {
       day: "Saturday",
       blocks: [
-        { time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰" },
+        { time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰", key: "wash" },
       ],
     },
     {
       day: "Sunday",
       blocks: [
-        { time: "ALL DAY", task: "Recovery / Reset", emoji: "🌴" },
+        { time: "ALL DAY", task: "Recovery / Reset", emoji: "🌴", key: "reset" },
       ],
     },
   ];
 
   return (
-    <>
-      <div style={styles.card}>
-        <h2 style={{ marginTop: 0 }}>Weekly Game Plan</h2>
+    <div style={styles.card}>
+      <h2 style={{ marginTop: 0 }}>Weekly Game Plan</h2>
 
-        <p
-          style={{
-            opacity: 0.65,
-            fontSize: 14,
-            marginBottom: 20,
-          }}
-        >
-          Every morning, ask yourself:
-          <br />
-          <strong>
-            "Am I washing, recovering, or selling right now?"
-          </strong>
-        </p>
+      {/* LIVE CLOCK */}
+      <div style={{ fontSize: 13, opacity: 0.7 }}>
+        Current time: <strong>{now.toLocaleTimeString()}</strong>
+      </div>
+
+      {/* STATUS HEADER */}
+      <div style={{ fontWeight: 600, marginTop: 6, marginBottom: 10 }}>
+        {activeBlock
+          ? `NOW: ${activeBlock.toUpperCase()} BLOCK`
+          : "NOW: OFF BLOCK (SCHEDULE STILL ACTIVE)"}
 
         <div
           style={{
-            display: "grid",
-            gap: 14,
+            marginTop: 10,
+            padding: 12,
+            borderRadius: 14,
+            background:
+              activeBlock === "wash"
+                ? "linear-gradient(135deg, #dbeafe, #eff6ff)"
+                : activeBlock === "sales"
+                ? "linear-gradient(135deg, #dcfce7, #f0fdf4)"
+                : activeBlock === "reset"
+                ? "linear-gradient(135deg, #f3f4f6, #ffffff)"
+                : "linear-gradient(135deg, #f9fafb, #ffffff)",
+            border: "1px solid rgba(0,0,0,0.06)",
           }}
         >
-          {weekSchedule.map((day) => (
+          <div style={{ fontSize: 12, opacity: 0.6 }}>Mode</div>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>
+            {productionIntensity}
+          </div>
+
+          <div style={{ fontSize: 12, marginTop: 6, opacity: 0.7 }}>
+            {activeBlock === "wash" &&
+              "Focus: high-ticket exterior surface cleaning + fast turnover"}
+            {activeBlock === "sales" &&
+              "Focus: closing deals, follow-ups, and upsells"}
+            {activeBlock === "reset" &&
+              "Recover energy, prep quotes, admin tasks"}
+            {!activeBlock && "Plan your day — no active block right now"}
+          </div>
+        </div>
+      </div>
+
+      {/* PROGRESS BAR */}
+      <div
+        style={{
+          position: "relative",
+          height: 10,
+          background: "#e5e7eb",
+          borderRadius: 999,
+          marginBottom: 18,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            width: `${progress}%`,
+            height: "100%",
+            background: "linear-gradient(90deg, #2563eb, #60a5fa)",
+            transition: "width 0.5s linear",
+          }}
+        />
+
+        <div
+          style={{
+            position: "absolute",
+            left: `${progress}%`,
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 14,
+            height: 14,
+            borderRadius: "50%",
+            background: "#fff",
+            border: "3px solid #2563eb",
+            boxShadow: "0 0 10px rgba(37,99,235,0.6)",
+            transition: "left 0.5s linear",
+          }}
+        />
+      </div>
+
+      {/* WEEKLY SCHEDULE (ALWAYS VISIBLE) */}
+      <div style={{ display: "grid", gap: 14 }}>
+        {weekSchedule.map((day) => {
+          const isToday = day.day === currentDay;
+
+          return (
             <div
               key={day.day}
               style={{
-                background: "#fafafa",
-                border: "1px solid rgba(0,0,0,0.05)",
+                background: isToday ? "#f5f9ff" : "#fafafa",
+                border: isToday
+                  ? "2px solid #2563eb"
+                  : "1px solid rgba(0,0,0,0.05)",
                 borderRadius: 16,
                 padding: 16,
               }}
             >
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 700,
-                  marginBottom: 12,
-                }}
-              >
+              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>
                 {day.day}
               </div>
 
-              {day.blocks.map((block) => (
-                <div
-                  key={block.time}
-                  style={{
-                    display: "flex",
-                    gap: 12,
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    borderRadius: 12,
-                    background: "#fff",
-                    marginBottom: 8,
-                    border: "1px solid #ececec",
-                  }}
-                >
-                  <span style={{ fontSize: 18 }}>
-                    {block.emoji}
-                  </span>
+              {day.blocks.map((block) => {
+                const isActive = isToday && activeBlock === block.key;
+                const isTodayBlock = isToday;
 
-                  <div>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        fontSize: 13,
-                      }}
-                    >
-                      {block.time}
-                    </div>
+                return (
+                  <div
+                    key={block.time}
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      borderRadius: 12,
+                      background: isActive
+                        ? "#dbeafe"
+                        : isTodayBlock
+                        ? "#f3f4f6"
+                        : "#fff",
+                      border: isActive
+                        ? "2px solid #2563eb"
+                        : "1px solid #ececec",
+                      marginBottom: 8,
+                      boxShadow: isActive
+                        ? "0 0 0 3px rgba(37,99,235,0.15)"
+                        : "none",
+                    }}
+                  >
+                    <span style={{ fontSize: 18 }}>{block.emoji}</span>
 
-                    <div
-                      style={{
-                        fontSize: 13,
-                        opacity: 0.65,
-                      }}
-                    >
-                      {block.task}
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>
+                        {block.time}
+                      </div>
+                      <div style={{ fontSize: 13, opacity: 0.65 }}>
+                        {block.task}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
-
-      <div style={styles.grid}>
-        <Card title="Doors / Week" value="400+" />
-        <Card title="Jobs Goal" value="5+" />
-        <Card title="Estimates" value="20+" />
-        <Card title="Reviews" value="10+" />
-      </div>
-    </>
+    </div>
   );
 }
 
 
+const jobCard: React.CSSProperties = {
+  background: "#fff",
+  padding: "12px 14px",
+  borderRadius: 12,
+  border: "1px solid #eee",
+  marginBottom: 10,
+  cursor: "pointer",
+};
+
 /* ---------------- PAGE ---------------- */
 export default function Home() {
+const serviceOrder = ["Driveway", "Sidewalk", "Patio", "Trashcans"];
+const saveRates = async () => {
+  setRatesSaved(false);
+
+  const { error } = await supabase.from("settings").upsert({
+    id: "main",
+    rates: rates,
+  });
+
+  if (error) {
+    console.log(error);
+    return;
+  }
+
+  setRatesSaved(true);
+};
+  
   const getRouteColor = (job: Customer) => {
   if (job.completed && job.paid) return "#dcfce7"; // green
   if (job.completed && !job.paid) return "#fef9c3"; // yellow
@@ -379,12 +507,19 @@ export default function Home() {
   const [calendarView, setCalendarView] = useState<"week" | "month">("week");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
-  const [tab, setTab] = useState<"dashboard" | "customers" | "map" | "calendar" | "insights" | "productivity">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "customers" | "map" | "calendar" | "insights" | "productivity" | "rates">("dashboard");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">("all");
   const [weekOffset, setWeekOffset] = useState(0);
   const [hoverDate, setHoverDate] = useState<string | null>(null);
-  const [dayStartTime, setDayStartTime] = useState("08:00");
+  const [dayStartTime, setDayStartTime] = useState("09:00");
+  const [ratesSaved, setRatesSaved] = useState(true);
+  const [rates, setRates] = useState({
+  Driveway: 40,
+  Sidewalk: 20,
+  Patio: 60,
+  Trashcans: 15,
+});
   const [form, setForm] = useState({
     name: "", phone: "", address: "", price: "", date: "", notes: "", services: [] as string[],
     lat: undefined as number | undefined, lng: undefined as number | undefined,
@@ -400,6 +535,22 @@ export default function Home() {
   }, []);
 
   useEffect(() => { loadCustomers(); }, [loadCustomers]);
+
+  useEffect(() => {
+  const loadRates = async () => {
+    const { data } = await supabase
+      .from("settings")
+      .select("rates")
+      .eq("id", "main")
+      .single();
+
+    if (data?.rates) {
+      setRates(data.rates);
+    }
+  };
+
+  loadRates();
+}, []);
 
   /* ---------------- GEO ---------------- */
   const geocodeAddress = useCallback(async (address: string) => {
@@ -446,6 +597,10 @@ export default function Home() {
   }, [selectedCustomer, customers, geocodeAddress, loadCustomers]);
 
   /* ---------------- ADD ---------------- */
+  const calculatedPrice = form.services.reduce((sum, service) => {
+  return sum + (rates[service as keyof typeof rates] || 0);
+}, 0);
+
   async function addCustomer() {
     if (!form.name || !form.address) return;
     let lat = form.lat, lng = form.lng;
@@ -567,7 +722,7 @@ const unscheduledCustomers = useMemo(() => {
 
       {/* TABS */}
       <div style={styles.tabs}>
-        {(["dashboard", "customers", "map", "calendar", "insights", "productivity"] as const).map((t) => (
+        {(["dashboard", "customers", "map", "calendar", "insights", "productivity", "rates"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} style={tab === t ? styles.activeTab : styles.tab}>
             {t.toUpperCase()}
           </button>
@@ -576,84 +731,156 @@ const unscheduledCustomers = useMemo(() => {
 
       {/* ── DASHBOARD ── */}
       {tab === "dashboard" && (
-        <>
-          <div style={styles.card}>
-            <h3>Today's Jobs</h3>
-            {todayJobs.length === 0 ? (
-              <p style={{ opacity: 0.5 }}>No jobs today</p>
-            ) : todayJobs.map((c) => (
-              <div key={c.id} style={{ ...styles.item, cursor: "pointer" }} onClick={() => { setSelectedCustomer(c); setIsEditingCustomer(false); }}>
-                <div style={{ ...styles.name, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  {c.name}
-                  <StatusBadge completed={c.completed} />
-                  {c.paid !== undefined && (
-                    <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 999, background: c.paid ? "#dcfce7" : "#fee2e2", color: c.paid ? "#166534" : "#991b1b" }}>
-                      {c.paid ? "PAID" : "UNPAID"}
-                    </span>
-                  )}
-                </div>
-                <div style={styles.sub}>{c.address}</div>
-                {c.services?.length > 0 && <div style={{ fontSize: 12, opacity: 0.6 }}>Services: {c.services.join(", ")}</div>}
-                {c.notes && <div style={{ fontSize: 12, opacity: 0.5, marginTop: 4 }}>Notes: {c.notes}</div>}
-              </div>
-            ))}
-          </div>
+  <>
+    {/* ── TOP KPI STRIP ── */}
+    <div style={{ ...styles.card, padding: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+        <div style={styles.kpiBox}>
+          <div style={styles.kpiLabel}>Jobs</div>
+          <div style={styles.kpiValue}>{todayJobs.length}</div>
+        </div>
 
-          <div style={styles.card}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>Route Order</h3>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 12, opacity: 0.6 }}>Start:</span>
-                <input type="time" value={dayStartTime} onChange={(e) => setDayStartTime(e.target.value)}
-                  style={{ padding: "4px 8px", borderRadius: 8, border: "1px solid #ddd", fontSize: 12 }} />
-              </div>
-            </div>
-            {routeJobs.length === 0 ? (
-              <p style={{ opacity: 0.5 }}>No route</p>
-            ) : sortedRouteJobs.map((c, i) => (
+        <div style={styles.kpiBox}>
+          <div style={styles.kpiLabel}>Completed</div>
+          <div style={styles.kpiValue}>
+            {todayJobs.filter((c) => c.completed).length}
+          </div>
+        </div>
+
+        <div style={styles.kpiBox}>
+          <div style={styles.kpiLabel}>Pending</div>
+          <div style={styles.kpiValue}>
+            {todayJobs.filter((c) => !c.completed).length}
+          </div>
+        </div>
+
+        <div style={styles.kpiBox}>
+  <div style={styles.kpiLabel}>Revenue</div>
+  <div style={styles.kpiValue}>
+    $
+    {todayJobs
+      .filter((c) => c.completed && c.paid)
+      .reduce((sum, c) => sum + (c.price || 0), 0)}
+  </div>
+</div>
+      </div>
+    </div>
+
+    {/* ── MAIN CONTENT GRID ── */}
+    <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 16 }}>
+      
+      {/* ── LEFT: PRIORITY JOB QUEUE ── */}
+      <div style={styles.card}>
+        <h3 style={styles.sectionTitle}>🔥 Today’s Job Queue</h3>
+
+        {todayJobs.length === 0 ? (
+          <p style={{ opacity: 0.5 }}>No jobs scheduled for today</p>
+        ) : (
+          todayJobs.map((c, idx) => {
+            const urgency =
+              c.completed ? "done" : c.time ? "scheduled" : "flex";
+
+            return (
               <div
-  key={c.id}
+                key={c.id}
+                onClick={() => {
+                  setSelectedCustomer(c);
+                  setIsEditingCustomer(false);
+                }}
+                style={{
+  ...styles.jobCard,
+  borderLeft:
+    urgency === "done"
+      ? "4px solid #22c55e"
+      : urgency === "scheduled"
+      ? "4px solid #2563eb"
+      : "4px solid #f59e0b",
+  opacity: c.completed ? 0.6 : 1,
+}}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <div style={{ fontWeight: 700 }}>
+                    {idx + 1}. {c.name}
+                  </div>
+
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <StatusBadge completed={c.completed} />
+                    {c.paid !== undefined && (
+                      <span
   style={{
-    ...styles.item,
-    background: getRouteColor(c),
-    border: c.completed && c.paid
-      ? "1px solid #22c55e"
-      : c.completed
-      ? "1px solid #eab308"
-      : "1px solid rgba(0,0,0,0.05)",
+    fontSize: 11,
+    padding: "4px 10px",
+    borderRadius: 999,
+    fontWeight: 600,
+    background: c.paid ? "#dcfce7" : "#fee2e2",
+    color: c.paid ? "#166534" : "#991b1b",
   }}
 >
-                <div style={{ ...styles.name, display: "flex", alignItems: "center", gap: 8 }}>
-                  {i + 1}. {c.name}
-                  {c.time && (
-                    <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "#dbeafe", color: "#1e40af" }}>
-                      FIXED {c.time}
-                    </span>
-                  )}
+  {c.paid ? "PAID" : "UNPAID"}
+</span>
+                    )}
+                  </div>
                 </div>
-                <div style={styles.sub}>{c.address}</div>
-                <div style={{ fontSize: 12, opacity: 0.6 }}>
-                  🕐 Arrival: {arrivalTimes.find((a) => a.id === c.id)?.arrival || "--"}
-                  {c.duration ? ` · ${c.duration} mins` : " · ~60 mins (default)"}
+
+                <div style={{ fontSize: 13, opacity: 0.7, marginTop: 4 }}>
+                  📍 {c.address}
+                </div>
+
+                <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6 }}>
+                  {c.services?.length ? `🧼 ${c.services.join(", ")}` : null}
+                  {c.notes ? ` • 📝 ${c.notes}` : null}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* ── RIGHT: ROUTE ITINERARY ── */}
+      <div style={styles.card}>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <h3 style={styles.sectionTitle}>🧭 Route Plan</h3>
+
+          <input
+            type="time"
+            value={dayStartTime}
+            onChange={(e) => setDayStartTime(e.target.value)}
+            style={styles.timeInput}
+          />
+        </div>
+
+        {sortedRouteJobs.length === 0 ? (
+          <p style={{ opacity: 0.5 }}>No route planned</p>
+        ) : (
+          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+            {sortedRouteJobs.map((c, i) => (
+              <div key={c.id} style={styles.jobCard}>
+                <div style={{ fontWeight: 700 }}>
+                  {i + 1}. {c.name}
+                </div>
+
+                <div style={{ fontSize: 12, opacity: 0.7 }}>
+                  📍 {c.address}
+                </div>
+
+                <div style={{ fontSize: 12, marginTop: 4, opacity: 0.6 }}>
+                  🕐 {arrivalTimes.find((a) => a.id === c.id)?.arrival || "--"}
+                  {c.duration ? ` • ${c.duration} min` : " • ~60 min"}
                 </div>
               </div>
             ))}
           </div>
-
-          <div style={styles.grid}>
-            <Card title="Today's Jobs" value={todayJobs.length} />
-            <Card title="Completed" value={todayJobs.filter((c) => c.completed).length} />
-            <Card title="Pending" value={todayJobs.filter((c) => !c.completed).length} />
-            <Card title="Today's Revenue" value={`$${todayJobs.filter((c) => c.completed && c.paid).reduce((sum, c) => sum + c.price, 0)}`} />
-          </div>
-        </>
-      )}
+        )}
+      </div>
+    </div>
+  </>
+)}
 
       {/* ── CUSTOMERS ── */}
       {tab === "customers" && (
         <div>
           <div style={styles.card}>
-            <h3>Add Job</h3>
+            <h3>Add Customer</h3>
             <input
               placeholder="Name"
               style={styles.input}
@@ -677,12 +904,22 @@ const unscheduledCustomers = useMemo(() => {
               <p style={{ fontSize: 12, opacity: 0.6 }}>Services</p>
               {SERVICES.map((service) => (
                 <button key={service}
-                  onClick={() => setForm((prev) => ({
-                    ...prev,
-                    services: prev.services.includes(service)
-                      ? prev.services.filter((s) => s !== service)
-                      : [...prev.services, service],
-                  }))}
+                  onClick={() =>
+  setForm((prev) => {
+    const updatedServices = prev.services.includes(service)
+      ? prev.services.filter((s) => s !== service)
+      : [...prev.services, service];
+
+    return {
+      ...prev,
+      services: updatedServices,
+      price: updatedServices.reduce(
+        (sum, s) => sum + (rates[s as keyof typeof rates] || 0),
+        0
+      ),
+    };
+  })
+}
                   style={{ marginRight: 8, marginBottom: 8, padding: "6px 10px", borderRadius: 999, border: "1px solid #ddd", background: form.services.includes(service) ? "#1d1d1f" : "#fff", color: form.services.includes(service) ? "#fff" : "#000", fontSize: 12, cursor: "pointer" }}
                 >
                   {service}
@@ -690,7 +927,7 @@ const unscheduledCustomers = useMemo(() => {
               ))}
             </div>
             <textarea placeholder="Notes" style={styles.input} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-            <button style={styles.addBtn} onClick={addCustomer}>Add Job</button>
+            <button style={styles.addBtn} onClick={addCustomer}>Add Customer</button>
           </div>
 
           <div style={styles.filters}>
@@ -822,6 +1059,51 @@ const unscheduledCustomers = useMemo(() => {
       {tab === "insights" && <InsightsTab customers={customers} />}
 
       {tab === "productivity" && <ProductivityTab />}
+
+      {tab === "rates" && (
+  <div style={styles.card}>
+    <h3>Set Your Service Rates</h3>
+    <div style={{ fontSize: 12, marginBottom: 10 }}>
+  {ratesSaved ? "Saved ✓" : "Saving..."}
+</div>
+
+    {serviceOrder.map((service) => (
+      <div key={service} style={{ marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>{service}</div>
+
+        <input
+          type="number"
+          value={rates[service as keyof typeof rates]}
+          onChange={(e) => {
+  const updated = {
+    ...rates,
+    [service]: Number(e.target.value),
+  };
+
+  setRates(updated);
+}}
+          style={styles.input}
+        />
+      </div>
+    ))}
+    <button
+  onClick={saveRates}
+  style={{
+    marginTop: 15,
+    width: "100%",
+    padding: 12,
+    borderRadius: 12,
+    border: "none",
+    background: "#1d1d1f",
+    color: "#fff",
+    fontWeight: 600,
+    cursor: "pointer",
+  }}
+>
+  Update Rates
+</button>
+  </div>
+)}
 
       {tab === "map" && (
         <div style={{ height: isMobile ? "calc(100vh - 120px)" : "75vh" }}>
@@ -1087,6 +1369,39 @@ function StatusBadge({ completed, large }: { completed: boolean; large?: boolean
 
 /* ---------------- STYLES ---------------- */
 const styles: any = {
+jobCard: {
+  background: "#fff",
+  borderRadius: 14,
+  padding: 12,
+  border: "1px solid rgba(0,0,0,0.06)",
+  marginBottom: 10,
+  cursor: "pointer",
+},
+
+  timeInput: {
+  padding: "6px 10px",
+  borderRadius: 10,
+  border: "1px solid #e5e7eb",
+  fontSize: 12,
+  background: "#fff",
+},
+  kpiBox: {
+  background: "#f8fafc",
+  border: "1px solid #e5e7eb",
+  borderRadius: 14,
+  padding: 12,
+},
+
+kpiLabel: {
+  fontSize: 11,
+  opacity: 0.6,
+  marginBottom: 4,
+},
+
+kpiValue: {
+  fontSize: 20,
+  fontWeight: 700,
+},
   page: {
     padding: "clamp(12px, 3vw, 24px)", background: "#f2f4f7", minHeight: "100vh",
     fontFamily: "-apple-system, BlinkMacSystemFont, SF Pro Display, SF Pro Text, Inter, sans-serif",
@@ -1132,6 +1447,11 @@ const styles: any = {
   btnDelete: { padding: "7px 14px", borderRadius: 999, border: "1px solid #fecaca", background: "#fff5f5", color: "#dc2626", fontSize: 12, fontWeight: 600, cursor: "pointer" },
   fieldLabel: { display: "flex", flexDirection: "column", gap: 5, fontWeight: 600, fontSize: 13, color: "#374151" },
   fieldInput: { padding: "9px 11px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 14, fontWeight: 400, width: "100%", boxSizing: "border-box", background: "#fafafa" },
+  sectionTitle: {
+  fontSize: 16,
+  fontWeight: 700,
+  marginBottom: 10,
+},
 };
 
 const calBtn = { padding: "6px 12px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer" };
