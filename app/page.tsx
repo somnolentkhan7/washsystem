@@ -723,7 +723,10 @@ const unscheduledCustomers = useMemo(() => {
       </div>
 
       {/* TABS */}
-      <div style={styles.tabs}>
+      <div style={{
+  ...styles.tabs,
+  padding: isMobile ? "8px 6px" : "12px 10px"
+}}>
         {(["dashboard", "customers", "map", "calendar", "insights", "productivity", "rates"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} style={tab === t ? styles.activeTab : styles.tab}>
             {t.toUpperCase()}
@@ -1415,7 +1418,7 @@ kpiValue: {
   title: { fontSize: 26, fontWeight: 700 },
   tabs: {
     display: "flex", gap: 6, overflowX: "auto", WebkitOverflowScrolling: "touch",
-    position: "sticky", top: 0, zIndex: 10, padding: isMobile ? "8px 6px" : "12px 10px", marginBottom: 16,
+    position: "sticky", top: 0, zIndex: 10, padding: "12px 10px", marginBottom: 16,
     background: "rgba(255,255,255,0.6)", backdropFilter: "blur(14px)",
     border: "1px solid rgba(0,0,0,0.06)", borderRadius: 16,
     scrollbarWidth: "none", msOverflowStyle: "none",
