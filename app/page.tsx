@@ -1422,7 +1422,7 @@ kpiValue: {
     background: "rgba(255,255,255,0.6)", backdropFilter: "blur(14px)",
     border: "1px solid rgba(0,0,0,0.06)", borderRadius: 16,
     scrollbarWidth: "none", msOverflowStyle: "none",
-    gap: isMobile ? 4 : 6,
+    gap: 6,
   },
   tab: {
     padding: "10px 14px", borderRadius: 999, fontSize: 13, cursor: "pointer",
@@ -1439,7 +1439,7 @@ kpiValue: {
   cardBox: { background: "#fff", borderRadius: 16, padding: 16, border: "1px solid rgba(0,0,0,0.06)" },
   cardTitle: { fontSize: 12, opacity: 0.6, marginBottom: 6 },
   cardValue: { fontSize: 22, fontWeight: 600 },
-  card: { background: "#fff", borderRadius: 16, padding: isMobile ? 12 : 18, marginBottom: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.04)" },
+  card: { background: "#fff", borderRadius: 16, padding: 16, marginBottom: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.04)" },
   input: { width: "100%", padding: 12, marginBottom: 10, borderRadius: 12, border: "1px solid rgba(0,0,0,0.08)", boxSizing: "border-box", fontSize: 14 },
   addBtn: { width: "100%", padding: 12, background: "#1d1d1f", color: "#fff", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600 },
   filters: { display: "flex", gap: 8, marginBottom: 12 },
