@@ -900,7 +900,7 @@ const unscheduledCustomers = useMemo(() => {
               style={{ ...styles.input, marginBottom: 10 }}
             />
             <input type="date" style={styles.input} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-            <input placeholder="Price" type="number" style={styles.input} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+            <input placeholder="Price" type="number" style={styles.input} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
             <div style={{ marginTop: 10 }}>
               <p style={{ fontSize: 12, opacity: 0.6 }}>Services</p>
               {SERVICES.map((service) => (
