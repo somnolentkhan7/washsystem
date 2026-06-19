@@ -522,7 +522,7 @@ const saveRates = async () => {
   Trashcans: 15,
 });
   const [form, setForm] = useState({
-    name: "", phone: "", address: "", price: "", date: "", notes: "", services: [] as string[],
+    name: "", phone: "", address: "", price: 0, date: "", notes: "", services: [] as string[],
     lat: undefined as number | undefined, lng: undefined as number | undefined,
   });
 
@@ -618,7 +618,7 @@ const saveRates = async () => {
     }]);
     if (error) { alert(error.message); return; }
     loadCustomers();
-    setForm({ name: "", phone: "", address: "", price: "", date: "", notes: "", services: [], lat: undefined, lng: undefined });
+    setForm({ name: "", phone: "", address: "", price: 0, date: "", notes: "", services: [], lat: undefined, lng: undefined });
   }
 
   /* ---------------- TOGGLE / DELETE ---------------- */
@@ -914,10 +914,12 @@ const unscheduledCustomers = useMemo(() => {
     return {
       ...prev,
       services: updatedServices,
-      price: updatedServices.reduce(
-        (sum, s) => sum + (rates[s as keyof typeof rates] || 0),
-        0
-      ),
+      price: String(
+  updatedServices.reduce(
+    (sum, s) => sum + (rates[s as keyof typeof rates] || 0),
+    0
+  )
+),
     };
   })
 }
