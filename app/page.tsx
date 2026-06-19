@@ -497,6 +497,7 @@ const saveRates = async () => {
   return "#fafafa"; // normal
 };
   const [isMobile, setIsMobile] = useState(false);
+  const mobile = isMobile;
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -735,7 +736,7 @@ const unscheduledCustomers = useMemo(() => {
   <>
     {/* ── TOP KPI STRIP ── */}
     <div style={{ ...styles.card, padding: 16 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: mobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10 }}>
         <div style={styles.kpiBox}>
           <div style={styles.kpiLabel}>Jobs</div>
           <div style={styles.kpiValue}>{todayJobs.length}</div>
@@ -768,7 +769,7 @@ const unscheduledCustomers = useMemo(() => {
     </div>
 
     {/* ── MAIN CONTENT GRID ── */}
-    <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 16 }}>
+    <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "1.2fr 1fr", gap: 16 }}>
       
       {/* ── LEFT: PRIORITY JOB QUEUE ── */}
       <div style={styles.card}>
@@ -1414,10 +1415,11 @@ kpiValue: {
   title: { fontSize: 26, fontWeight: 700 },
   tabs: {
     display: "flex", gap: 6, overflowX: "auto", WebkitOverflowScrolling: "touch",
-    position: "sticky", top: 0, zIndex: 10, padding: "12px 10px", marginBottom: 16,
+    position: "sticky", top: 0, zIndex: 10, padding: isMobile ? "8px 6px" : "12px 10px", marginBottom: 16,
     background: "rgba(255,255,255,0.6)", backdropFilter: "blur(14px)",
     border: "1px solid rgba(0,0,0,0.06)", borderRadius: 16,
     scrollbarWidth: "none", msOverflowStyle: "none",
+    gap: isMobile ? 4 : 6,
   },
   tab: {
     padding: "10px 14px", borderRadius: 999, fontSize: 13, cursor: "pointer",
@@ -1434,7 +1436,7 @@ kpiValue: {
   cardBox: { background: "#fff", borderRadius: 16, padding: 16, border: "1px solid rgba(0,0,0,0.06)" },
   cardTitle: { fontSize: 12, opacity: 0.6, marginBottom: 6 },
   cardValue: { fontSize: 22, fontWeight: 600 },
-  card: { background: "#fff", borderRadius: 16, padding: 18, marginBottom: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.04)" },
+  card: { background: "#fff", borderRadius: 16, padding: isMobile ? 12 : 18, marginBottom: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.04)" },
   input: { width: "100%", padding: 12, marginBottom: 10, borderRadius: 12, border: "1px solid rgba(0,0,0,0.08)", boxSizing: "border-box", fontSize: 14 },
   addBtn: { width: "100%", padding: 12, background: "#1d1d1f", color: "#fff", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600 },
   filters: { display: "flex", gap: 8, marginBottom: 12 },
