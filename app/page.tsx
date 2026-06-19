@@ -96,7 +96,7 @@ function useAddressAutocomplete(
   }, []);
 
   const handleInput = useCallback((val: string) => {
-    onChange(val);
+   onChange(val, undefined, undefined);
     setShowSuggestions(true);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => fetchSuggestions(val), 280);
@@ -914,7 +914,7 @@ const unscheduledCustomers = useMemo(() => {
     return {
       ...prev,
       services: updatedServices,
-      price: String(
+      price: Number(
   updatedServices.reduce(
     (sum, s) => sum + (rates[s as keyof typeof rates] || 0),
     0
@@ -1179,7 +1179,7 @@ const unscheduledCustomers = useMemo(() => {
                             onClick={() => setSelectedCustomer({
                               ...selectedCustomer,
                               services: active
-                                ? selectedCustomer.services.filter((s) => s !== service)
+                                ? (selectedCustomer.services || []).filter((s) => s !== service)
                                 : [...(selectedCustomer.services || []), service],
                             })}
                             style={{ padding: "6px 12px", borderRadius: 999, fontSize: 12, border: "1px solid #ddd", cursor: "pointer", background: active ? "#1d1d1f" : "#fff", color: active ? "#fff" : "#000" }}>
