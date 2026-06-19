@@ -77,9 +77,9 @@ function calcArrivalTimes(jobs: Customer[], startTime: string) {
 
 /* ---------------- ADDRESS AUTOCOMPLETE HOOK ---------------- */
 function useAddressAutocomplete(
-  value: string,
   onChange: (val: string, lat?: number, lng?: number) => void
-) {
+) 
+{
   const [suggestions, setSuggestions] = useState<{ description: string; place_id: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
