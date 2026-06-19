@@ -29,6 +29,26 @@ type Customer = {
 const HOME = { lat: 30.2032, lng: -97.85231 };
 const SERVICES = ["Driveway", "Sidewalk", "Patio", "Trashcans"];
 const FILTERS = ["all", "pending", "done"] as const;
+const TABS = ["dashboard", "customers", "map", "calendar", "insights", "productivity", "rates"] as const;
+const SERVICE_ORDER = ["Driveway", "Sidewalk", "Patio", "Trashcans"];
+const DEFAULT_RATES = {
+  Driveway: 40,
+  Sidewalk: 20,
+  Patio: 60,
+  Trashcans: 15,
+};
+
+const EMPTY_FORM = {
+  name: "",
+  phone: "",
+  address: "",
+  price: 0,
+  date: "",
+  notes: "",
+  services: [] as string[],
+  lat: undefined as number | undefined,
+  lng: undefined as number | undefined,
+};
 
 /* ---------------- HELPERS ---------------- */
 const getDateKey = (date: Date) => date.toISOString().split("T")[0];
@@ -463,39 +483,8 @@ function ProductivityTab() {
 }
 
 
-const jobCard: React.CSSProperties = {
-  background: "#fff",
-  padding: "12px 14px",
-  borderRadius: 12,
-  border: "1px solid #eee",
-  marginBottom: 10,
-  cursor: "pointer",
-};
-
 /* ---------------- PAGE ---------------- */
 export default function Home() {
-const serviceOrder = ["Driveway", "Sidewalk", "Patio", "Trashcans"];
-const saveRates = async () => {
-  setRatesSaved(false);
-
-  const { error } = await supabase.from("settings").upsert({
-    id: "main",
-    rates: rates,
-  });
-
-  if (error) {
-    console.log(error);
-    return;
-  }
-
-  setRatesSaved(true);
-};
-  
-  const getRouteColor = (job: Customer) => {
-  if (job.completed && job.paid) return "#dcfce7"; // green
-  if (job.completed && !job.paid) return "#fef9c3"; // yellow
-  return "#fafafa"; // normal
-};
   const [isMobile, setIsMobile] = useState(false);
   const mobile = isMobile;
 
@@ -509,23 +498,32 @@ const saveRates = async () => {
   const [calendarView, setCalendarView] = useState<"week" | "month">("week");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
-  const [tab, setTab] = useState<"dashboard" | "customers" | "map" | "calendar" | "insights" | "productivity" | "rates">("dashboard");
+  const [tab, setTab] = useState<(typeof TABS)[number]>("dashboard");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">("all");
   const [weekOffset, setWeekOffset] = useState(0);
   const [hoverDate, setHoverDate] = useState<string | null>(null);
   const [dayStartTime, setDayStartTime] = useState("09:00");
   const [ratesSaved, setRatesSaved] = useState(true);
-  const [rates, setRates] = useState({
-  Driveway: 40,
-  Sidewalk: 20,
-  Patio: 60,
-  Trashcans: 15,
-});
-  const [form, setForm] = useState({
-    name: "", phone: "", address: "", price: 0, date: "", notes: "", services: [] as string[],
-    lat: undefined as number | undefined, lng: undefined as number | undefined,
-  });
+  const [rates, setRates] = useState(DEFAULT_RATES);
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  const saveRates = async () => {
+    setRatesSaved(false);
+
+    const { error } = await supabase.from("settings").upsert({
+      id: "main",
+      rates,
+    });
+
+    if (error) {
+      console.error(error);
+      setRatesSaved(true);
+      return;
+    }
+
+    setRatesSaved(true);
+  };
 
   const todayKey = getDateKey(new Date());
 
@@ -588,8 +586,8 @@ const saveRates = async () => {
     };
     const original = customers.find((c) => c.id === selectedCustomer.id);
     if (original?.address !== selectedCustomer.address) {
-      const coords = selectedCustomer.lat
-        ? { lat: selectedCustomer.lat, lng: selectedCustomer.lng! }
+      const coords = typeof selectedCustomer.lat === "number" && typeof selectedCustomer.lng === "number"
+        ? { lat: selectedCustomer.lat, lng: selectedCustomer.lng }
         : await geocodeAddress(selectedCustomer.address);
       if (coords) { fields.lat = coords.lat; fields.lng = coords.lng; }
     }
@@ -599,14 +597,10 @@ const saveRates = async () => {
   }, [selectedCustomer, customers, geocodeAddress, loadCustomers]);
 
   /* ---------------- ADD ---------------- */
-  const calculatedPrice = form.services.reduce((sum, service) => {
-  return sum + (rates[service as keyof typeof rates] || 0);
-}, 0);
-
   async function addCustomer() {
     if (!form.name || !form.address) return;
     let lat = form.lat, lng = form.lng;
-    if (!lat) {
+    if (typeof lat !== "number" || typeof lng !== "number") {
       const coords = await geocodeAddress(form.address);
       lat = coords?.lat; lng = coords?.lng;
     }
@@ -618,29 +612,38 @@ const saveRates = async () => {
       lat: lat ?? null, lng: lng ?? null,
     }]);
     if (error) { alert(error.message); return; }
-    loadCustomers();
-    setForm({ name: "", phone: "", address: "", price: 0, date: "", notes: "", services: [], lat: undefined, lng: undefined });
+    await loadCustomers();
+    setForm(EMPTY_FORM);
   }
 
   /* ---------------- TOGGLE / DELETE ---------------- */
   const toggleComplete = useCallback(async (customer: Customer) => {
     await supabase.from("customers").update({ completed: !customer.completed }).eq("id", customer.id);
-    loadCustomers();
+    await loadCustomers();
   }, [loadCustomers]);
 
   const deleteCustomer = useCallback(async (id: string) => {
     await supabase.from("customers").delete().eq("id", id);
-    loadCustomers();
+    await loadCustomers();
   }, [loadCustomers]);
 
   /* ---------------- DRAG DROP ---------------- */
   const moveCustomerToDate = useCallback(async (customerId: string, newDate: string) => {
     await supabase.from("customers").update({ date: newDate }).eq("id", customerId);
-    loadCustomers();
+    await loadCustomers();
   }, [loadCustomers]);
 
   /* ---------------- DERIVED ---------------- */
   const todayJobs = useMemo(() => customers.filter((c) => c.date === todayKey), [customers, todayKey]);
+
+  const todayStats = useMemo(() => ({
+    total: todayJobs.length,
+    completed: todayJobs.filter((c) => c.completed).length,
+    pending: todayJobs.filter((c) => !c.completed).length,
+    revenue: todayJobs
+      .filter((c) => c.completed && c.paid)
+      .reduce((sum, c) => sum + (c.price || 0), 0),
+  }), [todayJobs]);
 
   const routeJobs = useMemo(() =>
     [...todayJobs].sort((a, b) =>
@@ -727,7 +730,7 @@ const unscheduledCustomers = useMemo(() => {
   ...styles.tabs,
   padding: isMobile ? "8px 6px" : "12px 10px"
 }}>
-        {(["dashboard", "customers", "map", "calendar", "insights", "productivity", "rates"] as const).map((t) => (
+        {TABS.map((t) => (
           <button key={t} onClick={() => setTab(t)} style={tab === t ? styles.activeTab : styles.tab}>
             {t.toUpperCase()}
           </button>
@@ -742,31 +745,22 @@ const unscheduledCustomers = useMemo(() => {
       <div style={{ display: "grid", gridTemplateColumns: mobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10 }}>
         <div style={styles.kpiBox}>
           <div style={styles.kpiLabel}>Jobs</div>
-          <div style={styles.kpiValue}>{todayJobs.length}</div>
+          <div style={styles.kpiValue}>{todayStats.total}</div>
         </div>
 
         <div style={styles.kpiBox}>
           <div style={styles.kpiLabel}>Completed</div>
-          <div style={styles.kpiValue}>
-            {todayJobs.filter((c) => c.completed).length}
-          </div>
+          <div style={styles.kpiValue}>{todayStats.completed}</div>
         </div>
 
         <div style={styles.kpiBox}>
           <div style={styles.kpiLabel}>Pending</div>
-          <div style={styles.kpiValue}>
-            {todayJobs.filter((c) => !c.completed).length}
-          </div>
+          <div style={styles.kpiValue}>{todayStats.pending}</div>
         </div>
 
         <div style={styles.kpiBox}>
   <div style={styles.kpiLabel}>Revenue</div>
-  <div style={styles.kpiValue}>
-    $
-    {todayJobs
-      .filter((c) => c.completed && c.paid)
-      .reduce((sum, c) => sum + (c.price || 0), 0)}
-  </div>
+  <div style={styles.kpiValue}>${todayStats.revenue}</div>
 </div>
       </div>
     </div>
@@ -1074,7 +1068,7 @@ const unscheduledCustomers = useMemo(() => {
   {ratesSaved ? "Saved ✓" : "Saving..."}
 </div>
 
-    {serviceOrder.map((service) => (
+    {SERVICE_ORDER.map((service) => (
       <div key={service} style={{ marginBottom: 10 }}>
         <div style={{ fontSize: 13, fontWeight: 600 }}>{service}</div>
 
@@ -1352,15 +1346,6 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
   );
 }
 
-function Card({ title, value }: { title: string; value: string | number }) {
-  return (
-    <div style={styles.cardBox}>
-      <div style={styles.cardTitle}>{title}</div>
-      <div style={styles.cardValue}>{value}</div>
-    </div>
-  );
-}
-
 function StatusBadge({ completed, large }: { completed: boolean; large?: boolean }) {
   return (
     <span style={{
@@ -1444,10 +1429,6 @@ kpiValue: {
     background: "#1d1d1f", color: "#fff", boxShadow: "0 6px 18px rgba(0,0,0,0.15)",
     transform: "scale(1.04)", transition: "all 0.15s ease",
   },
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14 },
-  cardBox: { background: "#fff", borderRadius: 16, padding: 16, border: "1px solid rgba(0,0,0,0.06)" },
-  cardTitle: { fontSize: 12, opacity: 0.6, marginBottom: 6 },
-  cardValue: { fontSize: 22, fontWeight: 600 },
   card: { background: "#fff", borderRadius: 16, padding: 16, marginBottom: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.04)" },
   input: { width: "100%", padding: 12, marginBottom: 10, borderRadius: 12, border: "1px solid rgba(0,0,0,0.08)", boxSizing: "border-box", fontSize: 14 },
   addBtn: { width: "100%", padding: 12, background: "#1d1d1f", color: "#fff", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600 },
