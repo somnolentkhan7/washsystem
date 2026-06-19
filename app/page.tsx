@@ -206,6 +206,160 @@ function AddressInput({
   );
 }
 
+function ProductivityTab() {
+  const weekSchedule = [
+    {
+      day: "Monday",
+      blocks: [
+        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼" },
+        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️" },
+        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪" },
+      ],
+    },
+    {
+      day: "Tuesday",
+      blocks: [
+        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼" },
+        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️" },
+        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪" },
+      ],
+    },
+    {
+      day: "Wednesday",
+      blocks: [
+        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼" },
+        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️" },
+        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪" },
+      ],
+    },
+    {
+      day: "Thursday",
+      blocks: [
+        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼" },
+        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️" },
+        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪" },
+      ],
+    },
+    {
+      day: "Friday",
+      blocks: [
+        { time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰" },
+      ],
+    },
+    {
+      day: "Saturday",
+      blocks: [
+        { time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰" },
+      ],
+    },
+    {
+      day: "Sunday",
+      blocks: [
+        { time: "ALL DAY", task: "Recovery / Reset", emoji: "🌴" },
+      ],
+    },
+  ];
+
+  return (
+    <>
+      <div style={styles.card}>
+        <h2 style={{ marginTop: 0 }}>Weekly Game Plan</h2>
+
+        <p
+          style={{
+            opacity: 0.65,
+            fontSize: 14,
+            marginBottom: 20,
+          }}
+        >
+          Every morning, ask yourself:
+          <br />
+          <strong>
+            "Am I washing, recovering, or selling right now?"
+          </strong>
+        </p>
+
+        <div
+          style={{
+            display: "grid",
+            gap: 14,
+          }}
+        >
+          {weekSchedule.map((day) => (
+            <div
+              key={day.day}
+              style={{
+                background: "#fafafa",
+                border: "1px solid rgba(0,0,0,0.05)",
+                borderRadius: 16,
+                padding: 16,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 700,
+                  marginBottom: 12,
+                }}
+              >
+                {day.day}
+              </div>
+
+              {day.blocks.map((block) => (
+                <div
+                  key={block.time}
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    background: "#fff",
+                    marginBottom: 8,
+                    border: "1px solid #ececec",
+                  }}
+                >
+                  <span style={{ fontSize: 18 }}>
+                    {block.emoji}
+                  </span>
+
+                  <div>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        fontSize: 13,
+                      }}
+                    >
+                      {block.time}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 13,
+                        opacity: 0.65,
+                      }}
+                    >
+                      {block.task}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={styles.grid}>
+        <Card title="Doors / Week" value="400+" />
+        <Card title="Jobs Goal" value="5+" />
+        <Card title="Estimates" value="20+" />
+        <Card title="Reviews" value="10+" />
+      </div>
+    </>
+  );
+}
+
+
 /* ---------------- PAGE ---------------- */
 export default function Home() {
   const getRouteColor = (job: Customer) => {
@@ -225,7 +379,7 @@ export default function Home() {
   const [calendarView, setCalendarView] = useState<"week" | "month">("week");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
-  const [tab, setTab] = useState<"dashboard" | "customers" | "map" | "calendar" | "insights">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "customers" | "map" | "calendar" | "insights" | "productivity">("dashboard");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">("all");
   const [weekOffset, setWeekOffset] = useState(0);
@@ -413,7 +567,7 @@ const unscheduledCustomers = useMemo(() => {
 
       {/* TABS */}
       <div style={styles.tabs}>
-        {(["dashboard", "customers", "map", "calendar", "insights"] as const).map((t) => (
+        {(["dashboard", "customers", "map", "calendar", "insights", "productivity"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} style={tab === t ? styles.activeTab : styles.tab}>
             {t.toUpperCase()}
           </button>
@@ -666,6 +820,8 @@ const unscheduledCustomers = useMemo(() => {
       )}
 
       {tab === "insights" && <InsightsTab customers={customers} />}
+
+      {tab === "productivity" && <ProductivityTab />}
 
       {tab === "map" && (
         <div style={{ height: isMobile ? "calc(100vh - 120px)" : "75vh" }}>
