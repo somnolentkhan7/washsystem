@@ -77,6 +77,7 @@ function calcArrivalTimes(jobs: Customer[], startTime: string) {
 
 /* ---------------- ADDRESS AUTOCOMPLETE HOOK ---------------- */
 function useAddressAutocomplete(
+  value: string,
   onChange: (val: string, lat?: number, lng?: number) => void
 ) 
 {
