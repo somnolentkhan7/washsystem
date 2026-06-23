@@ -99,8 +99,7 @@ function calcArrivalTimes(jobs: Customer[], startTime: string) {
 function useAddressAutocomplete(
   value: string,
   onChange: (val: string, lat?: number, lng?: number) => void
-) 
-{
+) {
   const [suggestions, setSuggestions] = useState<{ description: string; place_id: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -108,15 +107,14 @@ function useAddressAutocomplete(
   const fetchSuggestions = useCallback(async (input: string) => {
     if (input.length < 3) { setSuggestions([]); return; }
     try {
-      const res = await fetch(
-        `/api/places/autocomplete?input=${encodeURIComponent(input)}`      );
+      const res = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(input)}`);
       const data = await res.json();
       setSuggestions(data.predictions || []);
     } catch { setSuggestions([]); }
   }, []);
 
   const handleInput = useCallback((val: string) => {
-   onChange(val, undefined, undefined);
+    onChange(val, undefined, undefined);
     setShowSuggestions(true);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => fetchSuggestions(val), 280);
@@ -126,9 +124,7 @@ function useAddressAutocomplete(
     setSuggestions([]);
     setShowSuggestions(false);
     try {
-      const res = await fetch(
-        `/api/places/geocode?place_id=${placeId}`
-      );
+      const res = await fetch(`/api/places/geocode?place_id=${placeId}`);
       const data = await res.json();
       if (data.results?.[0]) {
         const { lat, lng } = data.results[0].geometry.location;
@@ -230,32 +226,17 @@ function AddressInput({
 function ProductivityTab() {
   const [now, setNow] = useState(new Date());
 
-  /* LIVE CLOCK */
   useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 30 * 1000);
-
+    const interval = setInterval(() => { setNow(new Date()); }, 30 * 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const currentDay = now.toLocaleDateString("en-US", {
-    weekday: "long",
-  });
-
+  const currentDay = now.toLocaleDateString("en-US", { weekday: "long" });
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-  /* DAY PROGRESS (9am → 8pm) */
   const DAY_START = 9 * 60;
   const DAY_END = 20 * 60;
+  const progress = Math.min(Math.max((currentMinutes - DAY_START) / (DAY_END - DAY_START), 0), 1) * 100;
 
-  const progress =
-    Math.min(
-      Math.max((currentMinutes - DAY_START) / (DAY_END - DAY_START), 0),
-      1
-    ) * 100;
-
-  /* ACTIVE BLOCK LOGIC */
   const getCurrentBlock = () => {
     if (currentMinutes >= 9 * 60 && currentMinutes < 13 * 60) return "wash";
     if (currentMinutes >= 13 * 60 && currentMinutes < 15.5 * 60) return "reset";
@@ -264,212 +245,56 @@ function ProductivityTab() {
   };
 
   const activeBlock = getCurrentBlock();
-
-  /* MODE LABEL (ALWAYS VALID) */
   const productionIntensity =
-    activeBlock === "wash"
-      ? "HIGH OUTPUT MODE"
-      : activeBlock === "sales"
-      ? "REVENUE HUNT MODE"
-      : activeBlock === "reset"
-      ? "RECOVERY MODE"
-      : "OFF-SEASON MODE";
+    activeBlock === "wash" ? "HIGH OUTPUT MODE" :
+    activeBlock === "sales" ? "REVENUE HUNT MODE" :
+    activeBlock === "reset" ? "RECOVERY MODE" : "OFF-SEASON MODE";
 
   const weekSchedule = [
-    {
-      day: "Monday",
-      blocks: [
-        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" },
-        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" },
-        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" },
-      ],
-    },
-    {
-      day: "Tuesday",
-      blocks: [
-        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" },
-        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" },
-        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" },
-      ],
-    },
-    {
-      day: "Wednesday",
-      blocks: [
-        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" },
-        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" },
-        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" },
-      ],
-    },
-    {
-      day: "Thursday",
-      blocks: [
-        { time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" },
-        { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" },
-        { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" },
-      ],
-    },
-    {
-      day: "Friday",
-      blocks: [
-        { time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰", key: "wash" },
-      ],
-    },
-    {
-      day: "Saturday",
-      blocks: [
-        { time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰", key: "wash" },
-      ],
-    },
-    {
-      day: "Sunday",
-      blocks: [
-        { time: "ALL DAY", task: "Recovery / Reset", emoji: "🌴", key: "reset" },
-      ],
-    },
+    { day: "Monday", blocks: [{ time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" }, { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" }, { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" }] },
+    { day: "Tuesday", blocks: [{ time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" }, { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" }, { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" }] },
+    { day: "Wednesday", blocks: [{ time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" }, { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" }, { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" }] },
+    { day: "Thursday", blocks: [{ time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" }, { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" }, { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" }] },
+    { day: "Friday", blocks: [{ time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰", key: "wash" }] },
+    { day: "Saturday", blocks: [{ time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰", key: "wash" }] },
+    { day: "Sunday", blocks: [{ time: "ALL DAY", task: "Recovery / Reset", emoji: "🌴", key: "reset" }] },
   ];
 
   return (
     <div style={styles.card}>
       <h2 style={{ marginTop: 0 }}>Weekly Game Plan</h2>
-
-      {/* LIVE CLOCK */}
-      <div style={{ fontSize: 13, opacity: 0.7 }}>
-        Current time: <strong>{now.toLocaleTimeString()}</strong>
-      </div>
-
-      {/* STATUS HEADER */}
+      <div style={{ fontSize: 13, opacity: 0.7 }}>Current time: <strong>{now.toLocaleTimeString()}</strong></div>
       <div style={{ fontWeight: 600, marginTop: 6, marginBottom: 10 }}>
-        {activeBlock
-          ? `NOW: ${activeBlock.toUpperCase()} BLOCK`
-          : "NOW: OFF BLOCK (SCHEDULE STILL ACTIVE)"}
-
-        <div
-          style={{
-            marginTop: 10,
-            padding: 12,
-            borderRadius: 14,
-            background:
-              activeBlock === "wash"
-                ? "linear-gradient(135deg, #dbeafe, #eff6ff)"
-                : activeBlock === "sales"
-                ? "linear-gradient(135deg, #dcfce7, #f0fdf4)"
-                : activeBlock === "reset"
-                ? "linear-gradient(135deg, #f3f4f6, #ffffff)"
-                : "linear-gradient(135deg, #f9fafb, #ffffff)",
-            border: "1px solid rgba(0,0,0,0.06)",
-          }}
-        >
+        {activeBlock ? `NOW: ${activeBlock.toUpperCase()} BLOCK` : "NOW: OFF BLOCK (SCHEDULE STILL ACTIVE)"}
+        <div style={{ marginTop: 10, padding: 12, borderRadius: 14, background: activeBlock === "wash" ? "linear-gradient(135deg, #dbeafe, #eff6ff)" : activeBlock === "sales" ? "linear-gradient(135deg, #dcfce7, #f0fdf4)" : activeBlock === "reset" ? "linear-gradient(135deg, #f3f4f6, #ffffff)" : "linear-gradient(135deg, #f9fafb, #ffffff)", border: "1px solid rgba(0,0,0,0.06)" }}>
           <div style={{ fontSize: 12, opacity: 0.6 }}>Mode</div>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>
-            {productionIntensity}
-          </div>
-
+          <div style={{ fontSize: 16, fontWeight: 700 }}>{productionIntensity}</div>
           <div style={{ fontSize: 12, marginTop: 6, opacity: 0.7 }}>
-            {activeBlock === "wash" &&
-              "Focus: high-ticket exterior surface cleaning + fast turnover"}
-            {activeBlock === "sales" &&
-              "Focus: closing deals, follow-ups, and upsells"}
-            {activeBlock === "reset" &&
-              "Recover energy, prep quotes, admin tasks"}
+            {activeBlock === "wash" && "Focus: high-ticket exterior surface cleaning + fast turnover"}
+            {activeBlock === "sales" && "Focus: closing deals, follow-ups, and upsells"}
+            {activeBlock === "reset" && "Recover energy, prep quotes, admin tasks"}
             {!activeBlock && "Plan your day — no active block right now"}
           </div>
         </div>
       </div>
-
-      {/* PROGRESS BAR */}
-      <div
-        style={{
-          position: "relative",
-          height: 10,
-          background: "#e5e7eb",
-          borderRadius: 999,
-          marginBottom: 18,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            width: `${progress}%`,
-            height: "100%",
-            background: "linear-gradient(90deg, #2563eb, #60a5fa)",
-            transition: "width 0.5s linear",
-          }}
-        />
-
-        <div
-          style={{
-            position: "absolute",
-            left: `${progress}%`,
-            top: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 14,
-            height: 14,
-            borderRadius: "50%",
-            background: "#fff",
-            border: "3px solid #2563eb",
-            boxShadow: "0 0 10px rgba(37,99,235,0.6)",
-            transition: "left 0.5s linear",
-          }}
-        />
+      <div style={{ position: "relative", height: 10, background: "#e5e7eb", borderRadius: 999, marginBottom: 18, overflow: "hidden" }}>
+        <div style={{ width: `${progress}%`, height: "100%", background: "linear-gradient(90deg, #2563eb, #60a5fa)", transition: "width 0.5s linear" }} />
+        <div style={{ position: "absolute", left: `${progress}%`, top: "50%", transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: "#fff", border: "3px solid #2563eb", boxShadow: "0 0 10px rgba(37,99,235,0.6)", transition: "left 0.5s linear" }} />
       </div>
-
-      {/* WEEKLY SCHEDULE (ALWAYS VISIBLE) */}
       <div style={{ display: "grid", gap: 14 }}>
         {weekSchedule.map((day) => {
           const isToday = day.day === currentDay;
-
           return (
-            <div
-              key={day.day}
-              style={{
-                background: isToday ? "#f5f9ff" : "#fafafa",
-                border: isToday
-                  ? "2px solid #2563eb"
-                  : "1px solid rgba(0,0,0,0.05)",
-                borderRadius: 16,
-                padding: 16,
-              }}
-            >
-              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>
-                {day.day}
-              </div>
-
+            <div key={day.day} style={{ background: isToday ? "#f5f9ff" : "#fafafa", border: isToday ? "2px solid #2563eb" : "1px solid rgba(0,0,0,0.05)", borderRadius: 16, padding: 16 }}>
+              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>{day.day}</div>
               {day.blocks.map((block) => {
                 const isActive = isToday && activeBlock === block.key;
-                const isTodayBlock = isToday;
-
                 return (
-                  <div
-                    key={block.time}
-                    style={{
-                      display: "flex",
-                      gap: 12,
-                      alignItems: "center",
-                      padding: "10px 12px",
-                      borderRadius: 12,
-                      background: isActive
-                        ? "#dbeafe"
-                        : isTodayBlock
-                        ? "#f3f4f6"
-                        : "#fff",
-                      border: isActive
-                        ? "2px solid #2563eb"
-                        : "1px solid #ececec",
-                      marginBottom: 8,
-                      boxShadow: isActive
-                        ? "0 0 0 3px rgba(37,99,235,0.15)"
-                        : "none",
-                    }}
-                  >
+                  <div key={block.time} style={{ display: "flex", gap: 12, alignItems: "center", padding: "10px 12px", borderRadius: 12, background: isActive ? "#dbeafe" : isToday ? "#f3f4f6" : "#fff", border: isActive ? "2px solid #2563eb" : "1px solid #ececec", marginBottom: 8, boxShadow: isActive ? "0 0 0 3px rgba(37,99,235,0.15)" : "none" }}>
                     <span style={{ fontSize: 18 }}>{block.emoji}</span>
-
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>
-                        {block.time}
-                      </div>
-                      <div style={{ fontSize: 13, opacity: 0.65 }}>
-                        {block.task}
-                      </div>
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>{block.time}</div>
+                      <div style={{ fontSize: 13, opacity: 0.65 }}>{block.task}</div>
                     </div>
                   </div>
                 );
@@ -481,7 +306,6 @@ function ProductivityTab() {
     </div>
   );
 }
-
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
@@ -498,6 +322,9 @@ export default function Home() {
   const [calendarView, setCalendarView] = useState<"week" | "month">("week");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+  // New state for the completion verification step
+  const [completingCustomer, setCompletingCustomer] = useState<Customer | null>(null);
+  const [completionPrice, setCompletionPrice] = useState<number>(0);
   const [tab, setTab] = useState<(typeof TABS)[number]>("dashboard");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">("all");
@@ -507,21 +334,14 @@ export default function Home() {
   const [ratesSaved, setRatesSaved] = useState(true);
   const [rates, setRates] = useState(DEFAULT_RATES);
   const [form, setForm] = useState(EMPTY_FORM);
+  // Route optimization: track if user has overridden with GPS location
+  const [routeOrigin, setRouteOrigin] = useState<{ lat: number; lng: number } | null>(null);
+  const [isOptimizingRoute, setIsOptimizingRoute] = useState(false);
 
   const saveRates = async () => {
     setRatesSaved(false);
-
-    const { error } = await supabase.from("settings").upsert({
-      id: "main",
-      rates,
-    });
-
-    if (error) {
-      console.error(error);
-      setRatesSaved(true);
-      return;
-    }
-
+    const { error } = await supabase.from("settings").upsert({ id: "main", rates });
+    if (error) { console.error(error); setRatesSaved(true); return; }
     setRatesSaved(true);
   };
 
@@ -537,29 +357,21 @@ export default function Home() {
   useEffect(() => { loadCustomers(); }, [loadCustomers]);
 
   useEffect(() => {
-  const loadRates = async () => {
-    const { data } = await supabase
-      .from("settings")
-      .select("rates")
-      .eq("id", "main")
-      .single();
-
-    if (data?.rates) {
-      setRates(data.rates);
-    }
-  };
-
-  loadRates();
-}, []);
+    const loadRates = async () => {
+      const { data } = await supabase.from("settings").select("rates").eq("id", "main").single();
+      if (data?.rates) setRates(data.rates);
+    };
+    loadRates();
+  }, []);
 
   /* ---------------- GEO ---------------- */
   const geocodeAddress = useCallback(async (address: string) => {
-  const res = await fetch(`/api/places/geocode?address=${encodeURIComponent(address)}`);
-  const data = await res.json();
-  if (!data.results?.length) return null;
-  const { lat, lng } = data.results[0].geometry.location;
-  return { lat, lng };
-}, []);
+    const res = await fetch(`/api/places/geocode?address=${encodeURIComponent(address)}`);
+    const data = await res.json();
+    if (!data.results?.length) return null;
+    const { lat, lng } = data.results[0].geometry.location;
+    return { lat, lng };
+  }, []);
 
   /* ---------------- UPDATE ---------------- */
   const updateCustomer = useCallback(async (id: string, fields: Partial<Customer>) => {
@@ -627,11 +439,50 @@ export default function Home() {
     await loadCustomers();
   }, [loadCustomers]);
 
+  /* ---------------- COMPLETION WITH PRICE VERIFICATION ---------------- */
+  // Called when user clicks "✓ Mark Complete" — opens price verification step
+  const initiateCompletion = useCallback((customer: Customer) => {
+    setCompletingCustomer(customer);
+    setCompletionPrice(customer.price);
+    setSelectedCustomer(null);
+  }, []);
+
+  // Called when user confirms final price and completes
+  const confirmCompletion = useCallback(async () => {
+    if (!completingCustomer) return;
+    await supabase.from("customers").update({
+      completed: true,
+      price: completionPrice,
+    }).eq("id", completingCustomer.id);
+    await loadCustomers();
+    setCompletingCustomer(null);
+  }, [completingCustomer, completionPrice, loadCustomers]);
+
   /* ---------------- DRAG DROP ---------------- */
   const moveCustomerToDate = useCallback(async (customerId: string, newDate: string) => {
     await supabase.from("customers").update({ date: newDate }).eq("id", customerId);
     await loadCustomers();
   }, [loadCustomers]);
+
+  /* ---------------- ROUTE OPTIMIZATION ---------------- */
+  const optimizeRouteFromLocation = useCallback(() => {
+    if (!navigator.geolocation) return alert("Geolocation not supported");
+    setIsOptimizingRoute(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setRouteOrigin({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setIsOptimizingRoute(false);
+      },
+      () => {
+        alert("Could not get your location");
+        setIsOptimizingRoute(false);
+      }
+    );
+  }, []);
+
+  const resetRouteToHome = useCallback(() => {
+    setRouteOrigin(null);
+  }, []);
 
   /* ---------------- DERIVED ---------------- */
   const todayJobs = useMemo(() => customers.filter((c) => c.date === todayKey), [customers, todayKey]);
@@ -640,16 +491,16 @@ export default function Home() {
     total: todayJobs.length,
     completed: todayJobs.filter((c) => c.completed).length,
     pending: todayJobs.filter((c) => !c.completed).length,
-    revenue: todayJobs
-      .filter((c) => c.completed && c.paid)
-      .reduce((sum, c) => sum + (c.price || 0), 0),
+    revenue: todayJobs.filter((c) => c.completed && c.paid).reduce((sum, c) => sum + (c.price || 0), 0),
   }), [todayJobs]);
+
+  const origin = routeOrigin || HOME;
 
   const routeJobs = useMemo(() =>
     [...todayJobs].sort((a, b) =>
-      Math.hypot((a.lat ?? 0) - HOME.lat, (a.lng ?? 0) - HOME.lng) -
-      Math.hypot((b.lat ?? 0) - HOME.lat, (b.lng ?? 0) - HOME.lng)
-    ), [todayJobs]);
+      Math.hypot((a.lat ?? 0) - origin.lat, (a.lng ?? 0) - origin.lng) -
+      Math.hypot((b.lat ?? 0) - origin.lat, (b.lng ?? 0) - origin.lng)
+    ), [todayJobs, origin]);
 
   const arrivalTimes = useMemo(() => calcArrivalTimes(routeJobs, dayStartTime), [routeJobs, dayStartTime]);
 
@@ -679,25 +530,22 @@ export default function Home() {
     () => (calendarView === "week" ? weekDays : monthDays),
     [calendarView, weekDays, monthDays]
   );
-  
+
   const filteredCustomers = useMemo(() => customers.filter((c) => {
     if (jobFilter === "done") return c.completed;
     if (jobFilter === "pending") return !c.completed;
     return true;
   }), [customers, jobFilter]);
 
-const unscheduledCustomers = useMemo(() => {
-  return [...customers]
-    .filter((c) => !c.date)
-    .sort((a, b) => {
-      // Priority 1: highest price first
-      const priceDiff = (b.price || 0) - (a.price || 0);
-      if (priceDiff !== 0) return priceDiff;
-
-      // Priority 2: newest first (optional fallback)
-      return (b.id || "").localeCompare(a.id || "");
-    });
-}, [customers]);
+  const unscheduledCustomers = useMemo(() => {
+    return [...customers]
+      .filter((c) => !c.date)
+      .sort((a, b) => {
+        const priceDiff = (b.price || 0) - (a.price || 0);
+        if (priceDiff !== 0) return priceDiff;
+        return (b.id || "").localeCompare(a.id || "");
+      });
+  }, [customers]);
 
   /* ---------------- MODAL STYLES ---------------- */
   const modalOverlayStyle: React.CSSProperties = {
@@ -726,10 +574,7 @@ const unscheduledCustomers = useMemo(() => {
       </div>
 
       {/* TABS */}
-      <div style={{
-  ...styles.tabs,
-  padding: isMobile ? "8px 6px" : "12px 10px"
-}}>
+      <div style={{ ...styles.tabs, padding: isMobile ? "8px 6px" : "12px 10px" }}>
         {TABS.map((t) => (
           <button key={t} onClick={() => setTab(t)} style={tab === t ? styles.activeTab : styles.tab}>
             {t.toUpperCase()}
@@ -739,188 +584,143 @@ const unscheduledCustomers = useMemo(() => {
 
       {/* ── DASHBOARD ── */}
       {tab === "dashboard" && (
-  <>
-    {/* ── TOP KPI STRIP ── */}
-    <div style={{ ...styles.card, padding: 16 }}>
-      <div style={{ display: "grid", gridTemplateColumns: mobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10 }}>
-        <div style={styles.kpiBox}>
-          <div style={styles.kpiLabel}>Jobs</div>
-          <div style={styles.kpiValue}>{todayStats.total}</div>
-        </div>
-
-        <div style={styles.kpiBox}>
-          <div style={styles.kpiLabel}>Completed</div>
-          <div style={styles.kpiValue}>{todayStats.completed}</div>
-        </div>
-
-        <div style={styles.kpiBox}>
-          <div style={styles.kpiLabel}>Pending</div>
-          <div style={styles.kpiValue}>{todayStats.pending}</div>
-        </div>
-
-        <div style={styles.kpiBox}>
-  <div style={styles.kpiLabel}>Revenue</div>
-  <div style={styles.kpiValue}>${todayStats.revenue}</div>
-</div>
-      </div>
-    </div>
-
-    {/* ── MAIN CONTENT GRID ── */}
-    <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "1.2fr 1fr", gap: 16 }}>
-      
-      {/* ── LEFT: PRIORITY JOB QUEUE ── */}
-      <div style={styles.card}>
-        <h3 style={styles.sectionTitle}>🔥 Today’s Job Queue</h3>
-
-        {todayJobs.length === 0 ? (
-          <p style={{ opacity: 0.5 }}>No jobs scheduled for today</p>
-        ) : (
-          todayJobs.map((c, idx) => {
-            const urgency =
-              c.completed ? "done" : c.time ? "scheduled" : "flex";
-
-            return (
-              <div
-                key={c.id}
-                onClick={() => {
-                  setSelectedCustomer(c);
-                  setIsEditingCustomer(false);
-                }}
-                style={{
-  ...styles.jobCard,
-  borderLeft:
-    urgency === "done"
-      ? "4px solid #22c55e"
-      : urgency === "scheduled"
-      ? "4px solid #2563eb"
-      : "4px solid #f59e0b",
-  opacity: c.completed ? 0.6 : 1,
-}}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <div style={{ fontWeight: 700 }}>
-                    {idx + 1}. {c.name}
-                  </div>
-
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <StatusBadge completed={c.completed} />
-                    {c.paid !== undefined && (
-                      <span
-  style={{
-    fontSize: 11,
-    padding: "4px 10px",
-    borderRadius: 999,
-    fontWeight: 600,
-    background: c.paid ? "#dcfce7" : "#fee2e2",
-    color: c.paid ? "#166534" : "#991b1b",
-  }}
->
-  {c.paid ? "PAID" : "UNPAID"}
-</span>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ fontSize: 13, opacity: 0.7, marginTop: 4 }}>
-                  📍 {c.address}
-                </div>
-
-                <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6 }}>
-                  {c.services?.length ? `🧼 ${c.services.join(", ")}` : null}
-                  {c.notes ? ` • 📝 ${c.notes}` : null}
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* ── RIGHT: ROUTE ITINERARY ── */}
-      <div style={styles.card}>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <h3 style={styles.sectionTitle}>🧭 Route Plan</h3>
-
-          <input
-            type="time"
-            value={dayStartTime}
-            onChange={(e) => setDayStartTime(e.target.value)}
-            style={styles.timeInput}
-          />
-        </div>
-
-        {sortedRouteJobs.length === 0 ? (
-          <p style={{ opacity: 0.5 }}>No route planned</p>
-        ) : (
-          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
-            {sortedRouteJobs.map((c, i) => (
-              <div key={c.id} style={styles.jobCard}>
-                <div style={{ fontWeight: 700 }}>
-                  {i + 1}. {c.name}
-                </div>
-
-                <div style={{ fontSize: 12, opacity: 0.7 }}>
-                  📍 {c.address}
-                </div>
-
-                <div style={{ fontSize: 12, marginTop: 4, opacity: 0.6 }}>
-                  🕐 {arrivalTimes.find((a) => a.id === c.id)?.arrival || "--"}
-                  {c.duration ? ` • ${c.duration} min` : " • ~60 min"}
-                </div>
-              </div>
-            ))}
+        <>
+          {/* TOP KPI STRIP */}
+          <div style={{ ...styles.card, padding: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: mobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10 }}>
+              <div style={styles.kpiBox}><div style={styles.kpiLabel}>Jobs</div><div style={styles.kpiValue}>{todayStats.total}</div></div>
+              <div style={styles.kpiBox}><div style={styles.kpiLabel}>Completed</div><div style={styles.kpiValue}>{todayStats.completed}</div></div>
+              <div style={styles.kpiBox}><div style={styles.kpiLabel}>Pending</div><div style={styles.kpiValue}>{todayStats.pending}</div></div>
+              <div style={styles.kpiBox}><div style={styles.kpiLabel}>Revenue</div><div style={styles.kpiValue}>${todayStats.revenue}</div></div>
+            </div>
           </div>
-        )}
-      </div>
-    </div>
-  </>
-)}
+
+          {/* MAIN CONTENT GRID */}
+          <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "1.2fr 1fr", gap: 16 }}>
+
+            {/* LEFT: PRIORITY JOB QUEUE */}
+            <div style={styles.card}>
+              <h3 style={styles.sectionTitle}>🔥 Today's Job Queue</h3>
+              {todayJobs.length === 0 ? (
+                <p style={{ opacity: 0.5 }}>No jobs scheduled for today</p>
+              ) : (
+                todayJobs.map((c, idx) => {
+                  const urgency = c.completed ? "done" : c.time ? "scheduled" : "flex";
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => { setSelectedCustomer(c); setIsEditingCustomer(false); }}
+                      style={{
+                        ...styles.jobCard,
+                        borderLeft: urgency === "done" ? "4px solid #22c55e" : urgency === "scheduled" ? "4px solid #2563eb" : "4px solid #f59e0b",
+                        opacity: c.completed ? 0.6 : 1,
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <div style={{ fontWeight: 700 }}>{idx + 1}. {c.name}</div>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <StatusBadge completed={c.completed} />
+                          {c.paid !== undefined && (
+                            <span style={{ fontSize: 11, padding: "4px 10px", borderRadius: 999, fontWeight: 600, background: c.paid ? "#dcfce7" : "#fee2e2", color: c.paid ? "#166534" : "#991b1b" }}>
+                              {c.paid ? "PAID" : "UNPAID"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 13, opacity: 0.7, marginTop: 4 }}>📍 {c.address}</div>
+                      <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6 }}>
+                        {c.services?.length ? `🧼 ${c.services.join(", ")}` : null}
+                        {c.notes ? ` • 📝 ${c.notes}` : null}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* RIGHT: ROUTE ITINERARY */}
+            <div style={styles.card}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
+                <h3 style={styles.sectionTitle}>🧭 Route Plan</h3>
+                <input
+                  type="time"
+                  value={dayStartTime}
+                  onChange={(e) => setDayStartTime(e.target.value)}
+                  style={styles.timeInput}
+                />
+              </div>
+
+              {/* Optimize route from current location button */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+                <button
+                  onClick={optimizeRouteFromLocation}
+                  disabled={isOptimizingRoute}
+                  style={{
+                    padding: "7px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                    border: "none", cursor: isOptimizingRoute ? "not-allowed" : "pointer",
+                    background: routeOrigin ? "#2563eb" : "#1d1d1f", color: "#fff",
+                    opacity: isOptimizingRoute ? 0.6 : 1, display: "flex", alignItems: "center", gap: 5,
+                  }}
+                >
+                  {isOptimizingRoute ? "⏳ Getting location..." : "📍 Optimize from My Location"}
+                </button>
+                {routeOrigin && (
+                  <button
+                    onClick={resetRouteToHome}
+                    style={{
+                      padding: "7px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                      border: "1px solid #e5e7eb", cursor: "pointer", background: "#fff", color: "#6b7280",
+                    }}
+                  >
+                    ↺ Reset to Home
+                  </button>
+                )}
+              </div>
+              {routeOrigin && (
+                <div style={{ fontSize: 11, color: "#2563eb", marginBottom: 8, padding: "4px 8px", background: "#eff6ff", borderRadius: 8, display: "inline-block" }}>
+                  ✓ Route optimized from your current location
+                </div>
+              )}
+
+              {sortedRouteJobs.length === 0 ? (
+                <p style={{ opacity: 0.5 }}>No route planned</p>
+              ) : (
+                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {sortedRouteJobs.map((c, i) => (
+                    <div key={c.id} style={styles.jobCard}>
+                      <div style={{ fontWeight: 700 }}>{i + 1}. {c.name}</div>
+                      <div style={{ fontSize: 12, opacity: 0.7 }}>📍 {c.address}</div>
+                      <div style={{ fontSize: 12, marginTop: 4, opacity: 0.6 }}>
+                        🕐 {arrivalTimes.find((a) => a.id === c.id)?.arrival || "--"}
+                        {c.duration ? ` • ${c.duration} min` : " • ~60 min"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── CUSTOMERS ── */}
       {tab === "customers" && (
         <div>
           <div style={styles.card}>
             <h3>Add Customer</h3>
-            <input
-              placeholder="Name"
-              style={styles.input}
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: autoCapitalize(e.target.value) })}
-            />
-            <input
-              placeholder="Phone Number"
-              style={styles.input}
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: formatPhone(e.target.value) })}
-            />
-            <AddressInput
-              value={form.address}
-              onAddressChange={(val, lat, lng) => setForm({ ...form, address: val, lat, lng })}
-              style={{ ...styles.input, marginBottom: 10 }}
-            />
+            <input placeholder="Name" style={styles.input} value={form.name} onChange={(e) => setForm({ ...form, name: autoCapitalize(e.target.value) })} />
+            <input placeholder="Phone Number" style={styles.input} value={form.phone} onChange={(e) => setForm({ ...form, phone: formatPhone(e.target.value) })} />
+            <AddressInput value={form.address} onAddressChange={(val, lat, lng) => setForm({ ...form, address: val, lat, lng })} style={{ ...styles.input, marginBottom: 10 }} />
             <input type="date" style={styles.input} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
             <input placeholder="Price" type="number" style={styles.input} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
             <div style={{ marginTop: 10 }}>
               <p style={{ fontSize: 12, opacity: 0.6 }}>Services</p>
               {SERVICES.map((service) => (
                 <button key={service}
-                  onClick={() =>
-  setForm((prev) => {
-    const updatedServices = prev.services.includes(service)
-      ? prev.services.filter((s) => s !== service)
-      : [...prev.services, service];
-
-    return {
-      ...prev,
-      services: updatedServices,
-      price: Number(
-  updatedServices.reduce(
-    (sum, s) => sum + (rates[s as keyof typeof rates] || 0),
-    0
-  )
-),
-    };
-  })
-}
+                  onClick={() => setForm((prev) => {
+                    const updatedServices = prev.services.includes(service) ? prev.services.filter((s) => s !== service) : [...prev.services, service];
+                    return { ...prev, services: updatedServices, price: Number(updatedServices.reduce((sum, s) => sum + (rates[s as keyof typeof rates] || 0), 0)) };
+                  })}
                   style={{ marginRight: 8, marginBottom: 8, padding: "6px 10px", borderRadius: 999, border: "1px solid #ddd", background: form.services.includes(service) ? "#1d1d1f" : "#fff", color: form.services.includes(service) ? "#fff" : "#000", fontSize: 12, cursor: "pointer" }}
                 >
                   {service}
@@ -942,8 +742,7 @@ const unscheduledCustomers = useMemo(() => {
           {filteredCustomers.map((c) => (
             <div key={c.id} style={styles.item}>
               <div style={{ ...styles.name, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                {c.name}
-                <StatusBadge completed={c.completed} />
+                {c.name}<StatusBadge completed={c.completed} />
               </div>
               <div style={styles.sub}>{c.address}</div>
               {c.date && <div style={{ fontSize: 12, opacity: 0.55, marginTop: 2 }}>📅 {c.date}</div>}
@@ -952,7 +751,13 @@ const unscheduledCustomers = useMemo(() => {
               <div style={styles.price}>${c.price}</div>
               <div style={styles.row}>
                 <button onClick={() => { setSelectedCustomer(c); setIsEditingCustomer(false); }} style={styles.btnEdit}>✏️ Edit</button>
-                <button onClick={() => toggleComplete(c)} style={{ ...styles.btnAction, background: c.completed ? "#f3f4f6" : "#1d1d1f", color: c.completed ? "#111" : "#fff" }}>
+                <button onClick={() => {
+                  if (!c.completed) {
+                    initiateCompletion(c);
+                  } else {
+                    toggleComplete(c);
+                  }
+                }} style={{ ...styles.btnAction, background: c.completed ? "#f3f4f6" : "#1d1d1f", color: c.completed ? "#111" : "#fff" }}>
                   {c.completed ? "↩ Undo" : "✓ Complete"}
                 </button>
                 <button onClick={() => deleteCustomer(c.id)} style={styles.btnDelete}>🗑 Delete</button>
@@ -968,9 +773,7 @@ const unscheduledCustomers = useMemo(() => {
           <div style={styles.card}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: 18 }}>
-                  {calendarView === "week" ? "Weekly Calendar" : "Monthly Calendar"}
-                </h3>
+                <h3 style={{ margin: 0, fontSize: 18 }}>{calendarView === "week" ? "Weekly Calendar" : "Monthly Calendar"}</h3>
                 <p style={{ opacity: 0.55, marginTop: 4, fontSize: 13 }}>Drag jobs between days to reschedule</p>
               </div>
               <div style={{ fontSize: 12, padding: "4px 10px", borderRadius: 999, background: "#f3f4f6", color: "#111" }}>
@@ -987,39 +790,25 @@ const unscheduledCustomers = useMemo(() => {
             </div>
           </div>
 
-          {/* UNSCHEDULED POOL */}
-<div style={styles.card}>
-  <h3 style={{ marginBottom: 8 }}>Unscheduled Customers</h3>
-  <p style={{ fontSize: 12, opacity: 0.6, marginBottom: 10 }}>
-    Drag these into a day to schedule them
-  </p>
+          <div style={styles.card}>
+            <h3 style={{ marginBottom: 8 }}>Unscheduled Customers</h3>
+            <p style={{ fontSize: 12, opacity: 0.6, marginBottom: 10 }}>Drag these into a day to schedule them</p>
+            {unscheduledCustomers.length === 0 ? (
+              <div style={{ opacity: 0.5, fontSize: 13 }}>No unscheduled customers</div>
+            ) : (
+              <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 6 }}>
+                {unscheduledCustomers.map((c) => (
+                  <div key={c.id} draggable onDragStart={(e) => e.dataTransfer.setData("customerId", c.id)}
+                    style={{ minWidth: 180, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 12, padding: 10, cursor: "grab" }}>
+                    <div style={{ fontWeight: 600 }}>{c.name}</div>
+                    <div style={{ fontSize: 12, opacity: 0.6 }}>{c.address}</div>
+                    <div style={{ fontSize: 12, marginTop: 4 }}>${c.price}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-  {unscheduledCustomers.length === 0 ? (
-    <div style={{ opacity: 0.5, fontSize: 13 }}>No unscheduled customers</div>
-  ) : (
-    <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 6 }}>
-      {unscheduledCustomers.map((c) => (
-        <div
-          key={c.id}
-          draggable
-          onDragStart={(e) => e.dataTransfer.setData("customerId", c.id)}
-          style={{
-            minWidth: 180,
-            background: "#f8fafc",
-            border: "1px solid #e5e7eb",
-            borderRadius: 12,
-            padding: 10,
-            cursor: "grab",
-          }}
-        >
-          <div style={{ fontWeight: 600 }}>{c.name}</div>
-          <div style={{ fontSize: 12, opacity: 0.6 }}>{c.address}</div>
-          <div style={{ fontSize: 12, marginTop: 4 }}>${c.price}</div>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(7, minmax(120px, 1fr))", overflowX: "auto", gap: 8 }}>
             {calendarDays.map((day, i) => {
               const key = getDateKey(day);
@@ -1058,53 +847,25 @@ const unscheduledCustomers = useMemo(() => {
       )}
 
       {tab === "insights" && <InsightsTab customers={customers} />}
-
       {tab === "productivity" && <ProductivityTab />}
 
       {tab === "rates" && (
-  <div style={styles.card}>
-    <h3>Set Your Service Rates</h3>
-    <div style={{ fontSize: 12, marginBottom: 10 }}>
-  {ratesSaved ? "Saved ✓" : "Saving..."}
-</div>
-
-    {SERVICE_ORDER.map((service) => (
-      <div key={service} style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: 13, fontWeight: 600 }}>{service}</div>
-
-        <input
-          type="number"
-          value={rates[service as keyof typeof rates]}
-          onChange={(e) => {
-  const updated = {
-    ...rates,
-    [service]: Number(e.target.value),
-  };
-
-  setRates(updated);
-}}
-          style={styles.input}
-        />
-      </div>
-    ))}
-    <button
-  onClick={saveRates}
-  style={{
-    marginTop: 15,
-    width: "100%",
-    padding: 12,
-    borderRadius: 12,
-    border: "none",
-    background: "#1d1d1f",
-    color: "#fff",
-    fontWeight: 600,
-    cursor: "pointer",
-  }}
->
-  Update Rates
-</button>
-  </div>
-)}
+        <div style={styles.card}>
+          <h3>Set Your Service Rates</h3>
+          <div style={{ fontSize: 12, marginBottom: 10 }}>{ratesSaved ? "Saved ✓" : "Saving..."}</div>
+          {SERVICE_ORDER.map((service) => (
+            <div key={service} style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{service}</div>
+              <input type="number" value={rates[service as keyof typeof rates]}
+                onChange={(e) => setRates({ ...rates, [service]: Number(e.target.value) })}
+                style={styles.input} />
+            </div>
+          ))}
+          <button onClick={saveRates} style={{ marginTop: 15, width: "100%", padding: 12, borderRadius: 12, border: "none", background: "#1d1d1f", color: "#fff", fontWeight: 600, cursor: "pointer" }}>
+            Update Rates
+          </button>
+        </div>
+      )}
 
       {tab === "map" && (
         <div style={{ height: isMobile ? "calc(100vh - 120px)" : "75vh" }}>
@@ -1116,57 +877,25 @@ const unscheduledCustomers = useMemo(() => {
       {selectedCustomer && (
         <div onClick={() => { setSelectedCustomer(null); setIsEditingCustomer(false); }} style={modalOverlayStyle}>
           <div onClick={(e) => e.stopPropagation()} style={modalStyle}>
-
             {isEditingCustomer ? (
-              /* ══ EDIT MODE ══ */
+              /* EDIT MODE */
               <div style={{ padding: isMobile ? 20 : 24 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                   <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Edit Job</h3>
                   <button onClick={() => setIsEditingCustomer(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", opacity: 0.4, padding: 4 }}>✕</button>
                 </div>
-
                 <div style={{ display: "grid", gap: 14 }}>
-                  <label style={styles.fieldLabel}>
-                    Name
-                    <input value={selectedCustomer.name}
-                      onChange={(e) => setSelectedCustomer({ ...selectedCustomer, name: autoCapitalize(e.target.value) })}
-                      style={styles.fieldInput} />
-                  </label>
-                  <label style={styles.fieldLabel}>
-                    Phone
-                    <input value={selectedCustomer.phone || ""}
-                      onChange={(e) => setSelectedCustomer({ ...selectedCustomer, phone: formatPhone(e.target.value) })}
-                      style={styles.fieldInput} placeholder="(555) 555-5555" />
-                  </label>
+                  <label style={styles.fieldLabel}>Name<input value={selectedCustomer.name} onChange={(e) => setSelectedCustomer({ ...selectedCustomer, name: autoCapitalize(e.target.value) })} style={styles.fieldInput} /></label>
+                  <label style={styles.fieldLabel}>Phone<input value={selectedCustomer.phone || ""} onChange={(e) => setSelectedCustomer({ ...selectedCustomer, phone: formatPhone(e.target.value) })} style={styles.fieldInput} placeholder="(555) 555-5555" /></label>
                   <label style={styles.fieldLabel}>
                     Address
-                    <AddressInput
-                      value={selectedCustomer.address}
-                      onAddressChange={(val, lat, lng) => setSelectedCustomer({ ...selectedCustomer, address: val, lat: lat ?? selectedCustomer.lat, lng: lng ?? selectedCustomer.lng })}
-                      style={styles.fieldInput}
-                    />
+                    <AddressInput value={selectedCustomer.address} onAddressChange={(val, lat, lng) => setSelectedCustomer({ ...selectedCustomer, address: val, lat: lat ?? selectedCustomer.lat, lng: lng ?? selectedCustomer.lng })} style={styles.fieldInput} />
                   </label>
                   <div style={{ display: "flex", gap: 12 }}>
-                    <label style={{ ...styles.fieldLabel, flex: 1 }}>
-                      Date
-                      <input type="date" value={selectedCustomer.date || ""}
-                        onChange={(e) => setSelectedCustomer({ ...selectedCustomer, date: e.target.value })}
-                        style={styles.fieldInput} />
-                    </label>
-                    <label style={{ ...styles.fieldLabel, flex: 1 }}>
-                      Price ($)
-                      <input type="number" value={selectedCustomer.price}
-                        onChange={(e) => setSelectedCustomer({ ...selectedCustomer, price: Number(e.target.value) })}
-                        style={styles.fieldInput} />
-                    </label>
+                    <label style={{ ...styles.fieldLabel, flex: 1 }}>Date<input type="date" value={selectedCustomer.date || ""} onChange={(e) => setSelectedCustomer({ ...selectedCustomer, date: e.target.value })} style={styles.fieldInput} /></label>
+                    <label style={{ ...styles.fieldLabel, flex: 1 }}>Price ($)<input type="number" value={selectedCustomer.price} onChange={(e) => setSelectedCustomer({ ...selectedCustomer, price: Number(e.target.value) })} style={styles.fieldInput} /></label>
                   </div>
-                  <label style={styles.fieldLabel}>
-                    Notes
-                    <textarea value={selectedCustomer.notes || ""}
-                      onChange={(e) => setSelectedCustomer({ ...selectedCustomer, notes: e.target.value })}
-                      rows={3} style={{ ...styles.fieldInput, resize: "vertical" }}
-                      placeholder="Special instructions..." />
-                  </label>
+                  <label style={styles.fieldLabel}>Notes<textarea value={selectedCustomer.notes || ""} onChange={(e) => setSelectedCustomer({ ...selectedCustomer, notes: e.target.value })} rows={3} style={{ ...styles.fieldInput, resize: "vertical" }} placeholder="Special instructions..." /></label>
                   <div>
                     <div style={{ ...styles.fieldLabel, marginBottom: 8 }}>Services</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -1174,12 +903,7 @@ const unscheduledCustomers = useMemo(() => {
                         const active = selectedCustomer.services?.includes(service);
                         return (
                           <button key={service}
-                            onClick={() => setSelectedCustomer({
-                              ...selectedCustomer,
-                              services: active
-                                ? (selectedCustomer.services || []).filter((s) => s !== service)
-                                : [...(selectedCustomer.services || []), service],
-                            })}
+                            onClick={() => setSelectedCustomer({ ...selectedCustomer, services: active ? (selectedCustomer.services || []).filter((s) => s !== service) : [...(selectedCustomer.services || []), service] })}
                             style={{ padding: "6px 12px", borderRadius: 999, fontSize: 12, border: "1px solid #ddd", cursor: "pointer", background: active ? "#1d1d1f" : "#fff", color: active ? "#fff" : "#000" }}>
                             {service}
                           </button>
@@ -1188,34 +912,16 @@ const unscheduledCustomers = useMemo(() => {
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 12 }}>
-                    <label style={{ ...styles.fieldLabel, flex: 1 }}>
-                      Arrival Time
-                      <input type="time" defaultValue={selectedCustomer.time || ""}
-                        onChange={(e) => updateCustomer(selectedCustomer.id, { time: e.target.value })}
-                        style={styles.fieldInput} />
-                    </label>
-                    <label style={{ ...styles.fieldLabel, flex: 1 }}>
-                      Duration (mins)
-                      <input type="number" defaultValue={selectedCustomer.duration || ""}
-                        onChange={(e) => updateCustomer(selectedCustomer.id, { duration: Number(e.target.value) })}
-                        style={styles.fieldInput} />
-                    </label>
+                    <label style={{ ...styles.fieldLabel, flex: 1 }}>Arrival Time<input type="time" defaultValue={selectedCustomer.time || ""} onChange={(e) => updateCustomer(selectedCustomer.id, { time: e.target.value })} style={styles.fieldInput} /></label>
+                    <label style={{ ...styles.fieldLabel, flex: 1 }}>Duration (mins)<input type="number" defaultValue={selectedCustomer.duration || ""} onChange={(e) => updateCustomer(selectedCustomer.id, { duration: Number(e.target.value) })} style={styles.fieldInput} /></label>
                   </div>
                 </div>
-
-                <button onClick={saveCustomerEdit}
-                  style={{ width: "100%", padding: 13, marginTop: 20, borderRadius: 12, border: "none", background: "#1d1d1f", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 15 }}>
-                  Save Changes
-                </button>
-                <button onClick={() => setIsEditingCustomer(false)}
-                  style={{ width: "100%", padding: 10, marginTop: 8, border: "1px solid #e5e7eb", borderRadius: 10, cursor: "pointer", background: "#fff", fontSize: 14 }}>
-                  Cancel
-                </button>
+                <button onClick={saveCustomerEdit} style={{ width: "100%", padding: 13, marginTop: 20, borderRadius: 12, border: "none", background: "#1d1d1f", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 15 }}>Save Changes</button>
+                <button onClick={() => setIsEditingCustomer(false)} style={{ width: "100%", padding: 10, marginTop: 8, border: "1px solid #e5e7eb", borderRadius: 10, cursor: "pointer", background: "#fff", fontSize: 14 }}>Cancel</button>
               </div>
             ) : (
-              /* ══ VIEW MODE ══ */
+              /* VIEW MODE */
               <>
-                {/* Header strip */}
                 <div style={{ padding: isMobile ? "20px 20px 16px" : "24px 24px 16px", borderBottom: "1px solid #f3f4f6" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div>
@@ -1229,57 +935,31 @@ const unscheduledCustomers = useMemo(() => {
                         )}
                       </div>
                     </div>
-                    <button onClick={() => { setSelectedCustomer(null); setIsEditingCustomer(false); }}
-                      style={{ background: "#f3f4f6", border: "none", borderRadius: 999, width: 32, height: 32, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      ✕
-                    </button>
+                    <button onClick={() => { setSelectedCustomer(null); setIsEditingCustomer(false); }} style={{ background: "#f3f4f6", border: "none", borderRadius: 999, width: 32, height: 32, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
                   </div>
                 </div>
 
-                {/* Info rows */}
                 <div style={{ padding: isMobile ? "16px 20px" : "16px 24px", display: "grid", gap: 0 }}>
                   <InfoRow icon="📍" label="Address" value={selectedCustomer.address} />
                   <InfoRow icon="📞" label="Phone" value={selectedCustomer.phone || "—"} />
                   <InfoRow icon="📅" label="Date" value={selectedCustomer.date || "—"} />
                   <InfoRow icon="💵" label="Price" value={`$${selectedCustomer.price}`} />
-                  {selectedCustomer.services?.length > 0 && (
-                    <InfoRow icon="🧼" label="Services" value={selectedCustomer.services.join(", ")} />
-                  )}
-                  {selectedCustomer.time && (
-                    <InfoRow icon="⏰" label="Arrival" value={selectedCustomer.time} />
-                  )}
-                  {selectedCustomer.duration && (
-                    <InfoRow icon="⏱" label="Duration" value={`${selectedCustomer.duration} mins`} />
-                  )}
-                  {selectedCustomer.payment_method && (
-                    <InfoRow icon="💳" label="Payment" value={selectedCustomer.payment_method} />
-                  )}
-                  {selectedCustomer.notes && (
-                    <InfoRow icon="📝" label="Notes" value={selectedCustomer.notes} />
-                  )}
-                  {selectedCustomer.upsells && selectedCustomer.upsells.length > 0 && (
-                    <InfoRow icon="⬆️" label="Upsells" value={selectedCustomer.upsells.join(", ")} />
-                  )}
+                  {selectedCustomer.services?.length > 0 && <InfoRow icon="🧼" label="Services" value={selectedCustomer.services.join(", ")} />}
+                  {selectedCustomer.time && <InfoRow icon="⏰" label="Arrival" value={selectedCustomer.time} />}
+                  {selectedCustomer.duration && <InfoRow icon="⏱" label="Duration" value={`${selectedCustomer.duration} mins`} />}
+                  {selectedCustomer.payment_method && <InfoRow icon="💳" label="Payment" value={selectedCustomer.payment_method} />}
+                  {selectedCustomer.notes && <InfoRow icon="📝" label="Notes" value={selectedCustomer.notes} />}
+                  {selectedCustomer.upsells && selectedCustomer.upsells.length > 0 && <InfoRow icon="⬆️" label="Upsells" value={selectedCustomer.upsells.join(", ")} />}
                 </div>
 
-                {/* Payment status section */}
                 <div style={{ padding: isMobile ? "0 20px 16px" : "0 24px 16px" }}>
                   <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.5px", opacity: 0.45, textTransform: "uppercase", marginBottom: 8 }}>Payment Status</div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => updateCustomer(selectedCustomer.id, { paid: true })}
-                      style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: selectedCustomer.paid ? "#16a34a" : "#f0fdf4", color: selectedCustomer.paid ? "#fff" : "#16a34a", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
-                      ✓ Paid
-                    </button>
-                    <button onClick={() => updateCustomer(selectedCustomer.id, { paid: false })}
-                      style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: !selectedCustomer.paid ? "#dc2626" : "#fef2f2", color: !selectedCustomer.paid ? "#fff" : "#dc2626", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
-                      ✗ Unpaid
-                    </button>
+                    <button onClick={() => updateCustomer(selectedCustomer.id, { paid: true })} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: selectedCustomer.paid ? "#16a34a" : "#f0fdf4", color: selectedCustomer.paid ? "#fff" : "#16a34a", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>✓ Paid</button>
+                    <button onClick={() => updateCustomer(selectedCustomer.id, { paid: false })} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: !selectedCustomer.paid ? "#dc2626" : "#fef2f2", color: !selectedCustomer.paid ? "#fff" : "#dc2626", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>✗ Unpaid</button>
                   </div>
-
                   <div style={{ marginTop: 10 }}>
-                    <select value={selectedCustomer.payment_method || ""}
-                      onChange={(e) => updateCustomer(selectedCustomer.id, { payment_method: e.target.value })}
-                      style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 13, background: "#fafafa", color: "#1d1d1f" }}>
+                    <select value={selectedCustomer.payment_method || ""} onChange={(e) => updateCustomer(selectedCustomer.id, { payment_method: e.target.value })} style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 13, background: "#fafafa", color: "#1d1d1f" }}>
                       <option value="">Payment method…</option>
                       <option value="Cash">Cash</option>
                       <option value="Venmo">Venmo</option>
@@ -1288,7 +968,6 @@ const unscheduledCustomers = useMemo(() => {
                   </div>
                 </div>
 
-                {/* Upsells */}
                 <div style={{ padding: isMobile ? "0 20px 16px" : "0 24px 16px" }}>
                   <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.5px", opacity: 0.45, textTransform: "uppercase", marginBottom: 8 }}>Upsells</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -1298,14 +977,12 @@ const unscheduledCustomers = useMemo(() => {
                         <button key={service}
                           onClick={async () => {
                             const currentUpsells = selectedCustomer.upsells || [];
-                            const updatedUpsells = active
-                              ? currentUpsells.filter((s) => s !== service)
-                              : [...currentUpsells, service];
+                            const updatedUpsells = active ? currentUpsells.filter((s) => s !== service) : [...currentUpsells, service];
                             const baseServices = (selectedCustomer.services || []).filter((s) => s === "Driveway");
                             const updatedServices = [...new Set([...baseServices, ...updatedUpsells])];
                             await updateCustomer(selectedCustomer.id, { upsells: updatedUpsells, services: updatedServices });
                           }}
-                          style={{ padding: "6px 12px", borderRadius: 999, fontSize: 12, border: "1px solid #ddd", cursor: "pointer", background: active ? "#1d1d1f" : "#fff", color: active ? "#fff" : "#000", transition: "0.1s ease" }}>
+                          style={{ padding: "6px 12px", borderRadius: 999, fontSize: 12, border: "1px solid #ddd", cursor: "pointer", background: active ? "#1d1d1f" : "#fff", color: active ? "#fff" : "#000" }}>
                           {service}
                         </button>
                       );
@@ -1313,19 +990,120 @@ const unscheduledCustomers = useMemo(() => {
                   </div>
                 </div>
 
-                {/* Action buttons */}
                 <div style={{ padding: isMobile ? "0 20px 28px" : "0 24px 24px", display: "grid", gap: 8 }}>
-                  <button onClick={() => setIsEditingCustomer(true)}
-                    style={{ width: "100%", padding: 12, borderRadius: 12, border: "1.5px solid #e5e7eb", background: "#fff", color: "#1d1d1f", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
-                    ✏️ Edit Details
-                  </button>
-                  <button onClick={async () => { await toggleComplete(selectedCustomer); setSelectedCustomer(null); }}
-                    style={{ width: "100%", padding: 12, borderRadius: 12, border: "none", background: selectedCustomer.completed ? "#6b7280" : "#1d1d1f", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
-                    {selectedCustomer.completed ? "↩ Mark Incomplete" : "✓ Mark Complete"}
-                  </button>
+                  <button onClick={() => setIsEditingCustomer(true)} style={{ width: "100%", padding: 12, borderRadius: 12, border: "1.5px solid #e5e7eb", background: "#fff", color: "#1d1d1f", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>✏️ Edit Details</button>
+                  {selectedCustomer.completed ? (
+                    <button onClick={async () => { await toggleComplete(selectedCustomer); setSelectedCustomer(null); }} style={{ width: "100%", padding: 12, borderRadius: 12, border: "none", background: "#6b7280", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
+                      ↩ Mark Incomplete
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => initiateCompletion(selectedCustomer)}
+                      style={{ width: "100%", padding: 12, borderRadius: 12, border: "none", background: "#16a34a", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14 }}
+                    >
+                      ✓ Mark Complete
+                    </button>
+                  )}
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── COMPLETION PRICE VERIFICATION MODAL ── */}
+      {completingCustomer && (
+        <div
+          onClick={() => setCompletingCustomer(null)}
+          style={modalOverlayStyle}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ ...modalStyle, maxWidth: 400 }}>
+            <div style={{ padding: isMobile ? 24 : 28 }}>
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#16a34a", marginBottom: 4 }}>
+                    ✅ Complete Job
+                  </div>
+                  <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{completingCustomer.name}</h3>
+                </div>
+                <button
+                  onClick={() => setCompletingCustomer(null)}
+                  style={{ background: "#f3f4f6", border: "none", borderRadius: 999, width: 32, height: 32, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                >✕</button>
+              </div>
+
+              {/* Job summary */}
+              <div style={{ background: "#f8fafc", borderRadius: 12, padding: 14, marginBottom: 20 }}>
+                <div style={{ fontSize: 13, opacity: 0.7, marginBottom: 6 }}>📍 {completingCustomer.address}</div>
+                {completingCustomer.services?.length > 0 && (
+                  <div style={{ fontSize: 13, opacity: 0.7 }}>🧼 {completingCustomer.services.join(", ")}</div>
+                )}
+              </div>
+
+              {/* Price verification */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: "#374151" }}>
+                  Verify Final Price
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 10 }}>
+                  Original quote: ${completingCustomer.price}. Update if the final price changed.
+                </div>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 18, fontWeight: 700, color: "#374151" }}>$</span>
+                  <input
+                    type="number"
+                    value={completionPrice}
+                    onChange={(e) => setCompletionPrice(Number(e.target.value))}
+                    style={{
+                      width: "100%", padding: "14px 14px 14px 30px", borderRadius: 12,
+                      border: "2px solid #16a34a", fontSize: 24, fontWeight: 700,
+                      boxSizing: "border-box", background: "#f0fdf4", color: "#15803d",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+                {completionPrice !== completingCustomer.price && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: "#f59e0b", fontWeight: 600 }}>
+                    ⚠️ Price changed from ${completingCustomer.price} → ${completionPrice}
+                  </div>
+                )}
+              </div>
+
+              {/* Quick price adjustments */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 12, opacity: 0.55, marginBottom: 8 }}>Quick adjust</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {[-10, -5, +5, +10, +20].map((delta) => (
+                    <button
+                      key={delta}
+                      onClick={() => setCompletionPrice((p) => Math.max(0, p + delta))}
+                      style={{
+                        padding: "6px 12px", borderRadius: 8, border: "1px solid #e5e7eb",
+                        background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                        color: delta > 0 ? "#16a34a" : "#dc2626",
+                      }}
+                    >
+                      {delta > 0 ? "+" : ""}{delta}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Confirm / Cancel */}
+              <button
+                onClick={confirmCompletion}
+                style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", background: "#16a34a", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", marginBottom: 8 }}
+              >
+                ✓ Confirm & Complete — ${completionPrice}
+              </button>
+              <button
+                onClick={() => setCompletingCustomer(null)}
+                style={{ width: "100%", padding: 11, borderRadius: 12, border: "1px solid #e5e7eb", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1348,12 +1126,7 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
 
 function StatusBadge({ completed, large }: { completed: boolean; large?: boolean }) {
   return (
-    <span style={{
-      display: "inline-block", fontSize: large ? 11 : 10,
-      padding: large ? "4px 10px" : "2px 8px", borderRadius: 999,
-      background: completed ? "#dcfce7" : "#fef9c3", color: completed ? "#166534" : "#92400e",
-      fontWeight: 600,
-    }}>
+    <span style={{ display: "inline-block", fontSize: large ? 11 : 10, padding: large ? "4px 10px" : "2px 8px", borderRadius: 999, background: completed ? "#dcfce7" : "#fef9c3", color: completed ? "#166534" : "#92400e", fontWeight: 600 }}>
       {completed ? (large ? "COMPLETED" : "DONE") : "PENDING"}
     </span>
   );
@@ -1361,74 +1134,17 @@ function StatusBadge({ completed, large }: { completed: boolean; large?: boolean
 
 /* ---------------- STYLES ---------------- */
 const styles: any = {
-jobCard: {
-  background: "#fff",
-  borderRadius: 14,
-  padding: 12,
-  border: "1px solid rgba(0,0,0,0.06)",
-  marginBottom: 10,
-  cursor: "pointer",
-},
-
-  timeInput: {
-  padding: "6px 10px",
-  borderRadius: 10,
-  border: "1px solid #e5e7eb",
-  fontSize: 12,
-  background: "#fff",
-},
-  kpiBox: {
-  background: "#f8fafc",
-  border: "1px solid #e5e7eb",
-  borderRadius: 14,
-  padding: 12,
-},
-
-kpiLabel: {
-  fontSize: 11,
-  opacity: 0.6,
-  marginBottom: 4,
-},
-
-kpiValue: {
-  fontSize: 20,
-  fontWeight: 700,
-},
-  page: {
-    padding: "clamp(12px, 3vw, 24px)", background: "#f2f4f7", minHeight: "100vh",
-    fontFamily: "-apple-system, BlinkMacSystemFont, SF Pro Display, SF Pro Text, Inter, sans-serif",
-    color: "#1d1d1f", maxWidth: 980, margin: "0 auto",
-  },
+  jobCard: { background: "#fff", borderRadius: 14, padding: 12, border: "1px solid rgba(0,0,0,0.06)", marginBottom: 10, cursor: "pointer" },
+  timeInput: { padding: "6px 10px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 12, background: "#fff" },
+  kpiBox: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 14, padding: 12 },
+  kpiLabel: { fontSize: 11, opacity: 0.6, marginBottom: 4 },
+  kpiValue: { fontSize: 20, fontWeight: 700 },
+  page: { padding: "clamp(12px, 3vw, 24px)", background: "#f2f4f7", minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, SF Pro Display, SF Pro Text, Inter, sans-serif", color: "#1d1d1f", maxWidth: 980, margin: "0 auto" },
   header: { marginBottom: 18 },
   title: { fontSize: 26, fontWeight: 700 },
-  tabs: {
-  display: "flex",
-  overflowX: "auto",
-  WebkitOverflowScrolling: "touch",
-  position: "sticky",
-  top: 0,
-  zIndex: 10,
-  padding: "12px 10px",
-  marginBottom: 16,
-  background: "rgba(255,255,255,0.6)",
-  backdropFilter: "blur(14px)",
-  border: "1px solid rgba(0,0,0,0.06)",
-  borderRadius: 16,
-  scrollbarWidth: "none",
-  msOverflowStyle: "none",
-  gap: 6, // ✅ ONLY ONCE
-},
-  tab: {
-    padding: "10px 14px", borderRadius: 999, fontSize: 13, cursor: "pointer",
-    whiteSpace: "nowrap", flexShrink: 0, border: "1px solid rgba(0,0,0,0.06)",
-    background: "rgba(255,255,255,0.7)", color: "#444", transition: "all 0.15s ease",
-  },
-  activeTab: {
-    padding: "10px 16px", borderRadius: 999, fontSize: 13, cursor: "pointer",
-    whiteSpace: "nowrap", flexShrink: 0, border: "1px solid rgba(0,0,0,0.08)",
-    background: "#1d1d1f", color: "#fff", boxShadow: "0 6px 18px rgba(0,0,0,0.15)",
-    transform: "scale(1.04)", transition: "all 0.15s ease",
-  },
+  tabs: { display: "flex", overflowX: "auto", WebkitOverflowScrolling: "touch", position: "sticky", top: 0, zIndex: 10, padding: "12px 10px", marginBottom: 16, background: "rgba(255,255,255,0.6)", backdropFilter: "blur(14px)", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 16, scrollbarWidth: "none", msOverflowStyle: "none", gap: 6 },
+  tab: { padding: "10px 14px", borderRadius: 999, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, border: "1px solid rgba(0,0,0,0.06)", background: "rgba(255,255,255,0.7)", color: "#444", transition: "all 0.15s ease" },
+  activeTab: { padding: "10px 16px", borderRadius: 999, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, border: "1px solid rgba(0,0,0,0.08)", background: "#1d1d1f", color: "#fff", boxShadow: "0 6px 18px rgba(0,0,0,0.15)", transform: "scale(1.04)", transition: "all 0.15s ease" },
   card: { background: "#fff", borderRadius: 16, padding: 16, marginBottom: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.04)" },
   input: { width: "100%", padding: 12, marginBottom: 10, borderRadius: 12, border: "1px solid rgba(0,0,0,0.08)", boxSizing: "border-box", fontSize: 14 },
   addBtn: { width: "100%", padding: 12, background: "#1d1d1f", color: "#fff", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600 },
@@ -1445,11 +1161,7 @@ kpiValue: {
   btnDelete: { padding: "7px 14px", borderRadius: 999, border: "1px solid #fecaca", background: "#fff5f5", color: "#dc2626", fontSize: 12, fontWeight: 600, cursor: "pointer" },
   fieldLabel: { display: "flex", flexDirection: "column", gap: 5, fontWeight: 600, fontSize: 13, color: "#374151" },
   fieldInput: { padding: "9px 11px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 14, fontWeight: 400, width: "100%", boxSizing: "border-box", background: "#fafafa" },
-  sectionTitle: {
-  fontSize: 16,
-  fontWeight: 700,
-  marginBottom: 10,
-},
+  sectionTitle: { fontSize: 16, fontWeight: 700, marginBottom: 10 },
 };
 
 const calBtn = { padding: "6px 12px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer" };
