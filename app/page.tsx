@@ -52,7 +52,10 @@ const EMPTY_FORM = {
 };
 
 /* ---------------- HELPERS ---------------- */
-const getDateKey = (date: Date) => date.toISOString().split("T")[0];
+const getDateKey = (date: Date) => {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().split("T")[0];
+};
 
 function formatPhone(value: string) {
   const cleaned = value.replace(/\D/g, "").slice(0, 10);
@@ -173,55 +176,82 @@ function AddressInput({
   };
 
   return (
-    <div style={{ position: "relative" }}>
-      <div style={{ display: "flex", gap: 6 }}>
-        <input
-          value={value}
-          onChange={(e) => handleInput(e.target.value)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-          placeholder={placeholder}
-          style={{ ...style, marginBottom: 0, flex: 1 }}
-          autoComplete="off"
-        />
-        <button
-          type="button"
-          onClick={useMyLocation}
-          title="Use my location"
-          style={{
-            padding: "0 12px", borderRadius: 12, border: "1px solid rgba(0,0,0,0.08)",
-            background: "#fff", cursor: "pointer", fontSize: 16, flexShrink: 0,
-            opacity: locating ? 0.5 : 1,
-          }}
-        >
-          {locating ? "⏳" : "📍"}
-        </button>
+  <div style={{ position: "relative" }}>
+    <input
+      value={value}
+      onChange={(e) => handleInput(e.target.value)}
+      onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+      onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+      placeholder={placeholder}
+      style={{ ...style, paddingRight: 40 }}
+      autoComplete="off"
+    />
+
+    <button
+      type="button"
+      onClick={useMyLocation}
+      style={{
+        position: "absolute",
+        right: 8,
+        top: "50%",
+        transform: "translateY(-50%)",
+        padding: "6px 10px",
+        borderRadius: 999,
+        border: "1px solid #e5e7eb",
+        background: "#fff",
+        fontSize: 12,
+        cursor: "pointer",
+      }}
+    >
+      {locating ? "⏳" : "📍"}
+    </button>
+
+    {showSuggestions && suggestions.length > 0 && (
+      <div
+        style={{
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          right: 0,
+          zIndex: 999,
+          background: "#fff",
+          border: "1px solid #e5e7eb",
+          borderRadius: 10,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+          overflow: "hidden",
+          marginTop: 4,
+        }}
+      >
+        {suggestions.map((s) => (
+          <div
+            key={s.place_id}
+            onMouseDown={() => selectSuggestion(s.description, s.place_id)}
+            style={{
+              padding: "10px 14px",
+              fontSize: 13,
+              cursor: "pointer",
+              borderBottom: "1px solid #f3f4f6",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 8,
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "#f8fafc")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "#fff")
+            }
+          >
+            <span style={{ opacity: 0.4, flexShrink: 0, marginTop: 1 }}>
+              📍
+            </span>
+            <span>{s.description}</span>
+          </div>
+        ))}
       </div>
-      {showSuggestions && suggestions.length > 0 && (
-        <div style={{
-          position: "absolute", top: "100%", left: 0, right: 0, zIndex: 999,
-          background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.1)", overflow: "hidden", marginTop: 4,
-        }}>
-          {suggestions.map((s) => (
-            <div
-              key={s.place_id}
-              onMouseDown={() => selectSuggestion(s.description, s.place_id)}
-              style={{
-                padding: "10px 14px", fontSize: 13, cursor: "pointer",
-                borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "flex-start", gap: 8,
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
-            >
-              <span style={{ opacity: 0.4, flexShrink: 0, marginTop: 1 }}>📍</span>
-              <span>{s.description}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+    )}
+  </div>
+);
 }
 
 function ProductivityTab() {
@@ -320,6 +350,7 @@ export default function Home() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
   const [calendarView, setCalendarView] = useState<"week" | "month">("week");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
@@ -335,6 +366,9 @@ export default function Home() {
   const [ratesSaved, setRatesSaved] = useState(true);
   const [rates, setRates] = useState(DEFAULT_RATES);
   const [form, setForm] = useState(EMPTY_FORM);
+  const resetForm = () => {
+  setForm(EMPTY_FORM);
+  };
   // Route optimization: track if user has overridden with GPS location
   const [routeOrigin, setRouteOrigin] = useState<{ lat: number; lng: number } | null>(null);
   const [isOptimizingRoute, setIsOptimizingRoute] = useState(false);
@@ -450,14 +484,35 @@ export default function Home() {
 
   // Called when user confirms final price and completes
   const confirmCompletion = useCallback(async () => {
-    if (!completingCustomer) return;
-    await supabase.from("customers").update({
+  if (!completingCustomer) return;
+
+  const updatedCustomer = {
+    ...completingCustomer,
+    completed: true,
+    price: completionPrice,
+    paid: true, // <-- this is what makes it update everywhere including paid status
+  };
+
+  // 1. Update database
+  await supabase
+    .from("customers")
+    .update({
       completed: true,
       price: completionPrice,
-    }).eq("id", completingCustomer.id);
-    await loadCustomers();
-    setCompletingCustomer(null);
-  }, [completingCustomer, completionPrice, loadCustomers]);
+      paid: true,
+    })
+    .eq("id", completingCustomer.id);
+
+  // 2. Update local state (this is what updates ALL tabs instantly)
+  setCustomers((prev) =>
+    prev.map((c) =>
+      c.id === completingCustomer.id ? updatedCustomer : c
+    )
+  );
+
+  // 3. Close modal
+  setCompletingCustomer(null);
+}, [completingCustomer, completionPrice]);
 
   /* ---------------- DRAG DROP ---------------- */
   const moveCustomerToDate = useCallback(async (customerId: string, newDate: string) => {
@@ -532,11 +587,25 @@ export default function Home() {
     [calendarView, weekDays, monthDays]
   );
 
-  const filteredCustomers = useMemo(() => customers.filter((c) => {
-    if (jobFilter === "done") return c.completed;
-    if (jobFilter === "pending") return !c.completed;
-    return true;
-  }), [customers, jobFilter]);
+  const filteredCustomers = useMemo(() => {
+  let result = customers;
+
+  // STEP 1: apply filter
+  if (jobFilter === "done") {
+    result = customers.filter((c) => c.completed);
+  } else if (jobFilter === "pending") {
+    result = customers.filter((c) => !c.completed);
+  }
+
+  // STEP 2: ONLY reorder for "all"
+  if (jobFilter === "all") {
+    result = [...customers].sort(
+      (a, b) => Number(a.completed) - Number(b.completed)
+    );
+  }
+
+  return result;
+}, [customers, jobFilter]);
 
   const unscheduledCustomers = useMemo(() => {
     return [...customers]
@@ -704,33 +773,148 @@ export default function Home() {
         </>
       )}
 
-      {/* ── CUSTOMERS ── */}
-      {tab === "customers" && (
+{/* ── CUSTOMERS ── */}
+{tab === "customers" && (
         <div>
-          <div style={styles.card}>
-            <h3>Add Customer</h3>
-            <input placeholder="Name" style={styles.input} value={form.name} onChange={(e) => setForm({ ...form, name: autoCapitalize(e.target.value) })} />
-            <input placeholder="Phone Number" style={styles.input} value={form.phone} onChange={(e) => setForm({ ...form, phone: formatPhone(e.target.value) })} />
-            <AddressInput value={form.address} onAddressChange={(val, lat, lng) => setForm({ ...form, address: val, lat, lng })} style={{ ...styles.input, marginBottom: 10 }} />
-            <input type="date" style={styles.input} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-            <input placeholder="Price" type="number" style={styles.input} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
-            <div style={{ marginTop: 10 }}>
-              <p style={{ fontSize: 12, opacity: 0.6 }}>Services</p>
-              {SERVICES.map((service) => (
-                <button key={service}
-                  onClick={() => setForm((prev) => {
-                    const updatedServices = prev.services.includes(service) ? prev.services.filter((s) => s !== service) : [...prev.services, service];
-                    return { ...prev, services: updatedServices, price: Number(updatedServices.reduce((sum, s) => sum + (rates[s as keyof typeof rates] || 0), 0)) };
-                  })}
-                  style={{ marginRight: 8, marginBottom: 8, padding: "6px 10px", borderRadius: 999, border: "1px solid #ddd", background: form.services.includes(service) ? "#1d1d1f" : "#fff", color: form.services.includes(service) ? "#fff" : "#000", fontSize: 12, cursor: "pointer" }}
-                >
-                  {service}
-                </button>
-              ))}
-            </div>
-            <textarea placeholder="Notes" style={styles.input} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-            <button style={styles.addBtn} onClick={addCustomer}>Add Customer</button>
-          </div>
+  <div style={{ ...styles.card, position: "relative" }}>
+  
+  <button
+    onClick={() => setForm(EMPTY_FORM)}
+    type="button"
+    style={{
+      position: "absolute",
+      top: 10,
+      right: 10,
+      width: 26,
+      height: 26,
+      borderRadius: 999,
+      border: "1px solid #e5e7eb",
+      background: "#fff",
+      cursor: "pointer",
+      fontSize: 14,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      lineHeight: 1,
+    }}
+  >
+    ✕
+  </button>
+
+  <h3 style={{ marginTop: 0 }}>Add Customer</h3>
+
+<div style={formGroup}>
+  <input
+    placeholder="Name"
+    style={styles.input}
+    value={form.name}
+    onChange={(e) =>
+      setForm({ ...form, name: autoCapitalize(e.target.value) })
+    }
+  />
+</div>
+
+<div style={formGroup}>
+  <input
+    placeholder="Phone Number"
+    style={styles.input}
+    value={form.phone}
+    onChange={(e) =>
+      setForm({ ...form, phone: formatPhone(e.target.value) })
+    }
+  />
+</div>
+
+<div style={formGroup}>
+  <AddressInput
+    value={form.address}
+    onAddressChange={(val, lat, lng) =>
+      setForm({ ...form, address: val, lat, lng })
+    }
+    style={styles.input}
+  />
+</div>
+
+<div style={formGroup}>
+  <input
+    type="date"
+    style={styles.input}
+    value={form.date}
+    onChange={(e) =>
+      setForm({ ...form, date: e.target.value })
+    }
+  />
+</div>
+
+<div style={formGroup}>
+  <input
+    placeholder="Price"
+    type="number"
+    style={styles.input}
+    value={form.price}
+    onChange={(e) =>
+      setForm({ ...form, price: Number(e.target.value) })
+    }
+  />
+</div>
+
+  <div style={{ marginTop: 10 }}>
+    <p style={{ fontSize: 12, opacity: 0.6 }}>Services</p>
+    {SERVICES.map((service) => (
+      <button
+        key={service}
+        onClick={() =>
+          setForm((prev) => {
+            const updatedServices = prev.services.includes(service)
+              ? prev.services.filter((s) => s !== service)
+              : [...prev.services, service];
+
+            return {
+              ...prev,
+              services: updatedServices,
+              price: Number(
+                updatedServices.reduce(
+                  (sum, s) => sum + (rates[s as keyof typeof rates] || 0),
+                  0
+                )
+              ),
+            };
+          })
+        }
+        style={{
+          marginRight: 8,
+          marginBottom: 8,
+          padding: "6px 10px",
+          borderRadius: 999,
+          border: "1px solid #ddd",
+          background: form.services.includes(service)
+            ? "#1d1d1f"
+            : "#fff",
+          color: form.services.includes(service)
+            ? "#fff"
+            : "#000",
+          fontSize: 12,
+          cursor: "pointer",
+        }}
+      >
+        {service}
+      </button>
+    ))}
+  </div>
+
+  <textarea
+    placeholder="Notes"
+    style={styles.input}
+    value={form.notes}
+    onChange={(e) =>
+      setForm({ ...form, notes: e.target.value })
+    }
+  />
+
+  <button style={styles.addBtn} onClick={addCustomer}>
+    Add Customer
+  </button>
+</div>
 
           <div style={styles.filters}>
             {FILTERS.map((f) => (
@@ -761,12 +945,17 @@ export default function Home() {
                 }} style={{ ...styles.btnAction, background: c.completed ? "#f3f4f6" : "#1d1d1f", color: c.completed ? "#111" : "#fff" }}>
                   {c.completed ? "↩ Undo" : "✓ Complete"}
                 </button>
-                <button onClick={() => deleteCustomer(c.id)} style={styles.btnDelete}>🗑 Delete</button>
+<button
+  onClick={() => setDeleteTarget(c)}
+  style={styles.btnDelete}
+>
+  🗑 Delete
+</button>
               </div>
             </div>
           ))}
         </div>
-      )}
+)}
 
       {/* ── CALENDAR ── */}
       {tab === "calendar" && (
@@ -953,21 +1142,6 @@ export default function Home() {
                   {selectedCustomer.upsells && selectedCustomer.upsells.length > 0 && <InfoRow icon="⬆️" label="Upsells" value={selectedCustomer.upsells.join(", ")} />}
                 </div>
 
-                <div style={{ padding: isMobile ? "0 20px 16px" : "0 24px 16px" }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.5px", opacity: 0.45, textTransform: "uppercase", marginBottom: 8 }}>Payment Status</div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => updateCustomer(selectedCustomer.id, { paid: true })} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: selectedCustomer.paid ? "#16a34a" : "#f0fdf4", color: selectedCustomer.paid ? "#fff" : "#16a34a", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>✓ Paid</button>
-                    <button onClick={() => updateCustomer(selectedCustomer.id, { paid: false })} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: !selectedCustomer.paid ? "#dc2626" : "#fef2f2", color: !selectedCustomer.paid ? "#fff" : "#dc2626", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>✗ Unpaid</button>
-                  </div>
-                  <div style={{ marginTop: 10 }}>
-                    <select value={selectedCustomer.payment_method || ""} onChange={(e) => updateCustomer(selectedCustomer.id, { payment_method: e.target.value })} style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 13, background: "#fafafa", color: "#1d1d1f" }}>
-                      <option value="">Payment method…</option>
-                      <option value="Cash">Cash</option>
-                      <option value="Venmo">Venmo</option>
-                      <option value="Card">Card</option>
-                    </select>
-                  </div>
-                </div>
 
                 <div style={{ padding: isMobile ? "0 20px 16px" : "0 24px 16px" }}>
                   <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.5px", opacity: 0.45, textTransform: "uppercase", marginBottom: 8 }}>Upsells</div>
@@ -994,9 +1168,37 @@ export default function Home() {
                 <div style={{ padding: isMobile ? "0 20px 28px" : "0 24px 24px", display: "grid", gap: 8 }}>
                   <button onClick={() => setIsEditingCustomer(true)} style={{ width: "100%", padding: 12, borderRadius: 12, border: "1.5px solid #e5e7eb", background: "#fff", color: "#1d1d1f", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>✏️ Edit Details</button>
                   {selectedCustomer.completed ? (
-                    <button onClick={async () => { await toggleComplete(selectedCustomer); setSelectedCustomer(null); }} style={{ width: "100%", padding: 12, borderRadius: 12, border: "none", background: "#6b7280", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
-                      ↩ Mark Incomplete
-                    </button>
+                    <button
+  onClick={async () => {
+    await updateCustomer(selectedCustomer.id, {
+      completed: false,
+      paid: false,
+    });
+
+    setCustomers((prev) =>
+      prev.map((c) =>
+        c.id === selectedCustomer.id
+          ? { ...c, completed: false, paid: false }
+          : c
+      )
+    );
+
+    setSelectedCustomer(null);
+  }}
+  style={{
+    width: "100%",
+    padding: 12,
+    borderRadius: 12,
+    border: "none",
+    background: "#6b7280",
+    color: "#fff",
+    fontWeight: 600,
+    cursor: "pointer",
+    fontSize: 14,
+  }}
+>
+  ↩ Mark Incomplete
+</button>
                   ) : (
                     <button
                       onClick={() => initiateCompletion(selectedCustomer)}
@@ -1091,6 +1293,36 @@ export default function Home() {
                 </div>
               </div>
 
+                {/* Payment Info */}
+<div style={{ marginBottom: 16 }}>
+  <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.6, marginBottom: 8 }}>
+    Payment
+  </div>
+
+
+  <select
+    value={completingCustomer?.payment_method || ""}
+    onChange={(e) =>
+      setCompletingCustomer((prev) => ({
+        ...prev,
+        payment_method: e.target.value,
+      }) as any)
+    }
+    style={{
+      width: "100%",
+      padding: "9px 12px",
+      borderRadius: 10,
+      border: "1px solid #e5e7eb",
+      fontSize: 13,
+      background: "#fafafa",
+    }}
+  >
+    <option value="">Payment method…</option>
+    <option value="Cash">Cash</option>
+    <option value="Venmo">Venmo</option>
+    <option value="Card">Card</option>
+  </select>
+</div>
               {/* Confirm / Cancel */}
               <button
                 onClick={confirmCompletion}
@@ -1108,6 +1340,63 @@ export default function Home() {
           </div>
         </div>
       )}
+
+
+      {deleteTarget && (
+  <div
+    onClick={() => setDeleteTarget(null)}
+    style={modalOverlayStyle}
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{ ...modalStyle, maxWidth: 380, padding: 24 }}
+    >
+      <h3 style={{ marginTop: 0 }}>Delete Customer?</h3>
+
+      <p style={{ fontSize: 14, opacity: 0.7 }}>
+        Are you sure you want to delete{" "}
+        <strong>{deleteTarget.name}</strong>? This cannot be undone.
+      </p>
+
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+        <button
+          onClick={() => setDeleteTarget(null)}
+          style={{
+            flex: 1,
+            padding: 12,
+            borderRadius: 10,
+            border: "1px solid #e5e7eb",
+            background: "#fff",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => {
+            deleteCustomer(deleteTarget.id);
+            setDeleteTarget(null);
+          }}
+          style={{
+            flex: 1,
+            padding: 12,
+            borderRadius: 10,
+            border: "none",
+            background: "#dc2626",
+            color: "#fff",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </main>
   );
 }
@@ -1133,6 +1422,13 @@ function StatusBadge({ completed, large }: { completed: boolean; large?: boolean
   );
 }
 
+const formGroup = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
+  
+};
+
 /* ---------------- STYLES ---------------- */
 const styles: any = {
   jobCard: { background: "#fff", borderRadius: 14, padding: 12, border: "1px solid rgba(0,0,0,0.06)", marginBottom: 10, cursor: "pointer" },
@@ -1147,7 +1443,19 @@ const styles: any = {
   tab: { padding: "10px 14px", borderRadius: 999, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, border: "1px solid rgba(0,0,0,0.06)", background: "rgba(255,255,255,0.7)", color: "#444", transition: "all 0.15s ease" },
   activeTab: { padding: "10px 16px", borderRadius: 999, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, border: "1px solid rgba(0,0,0,0.08)", background: "#1d1d1f", color: "#fff", boxShadow: "0 6px 18px rgba(0,0,0,0.15)", transform: "scale(1.04)", transition: "all 0.15s ease" },
   card: { background: "#fff", borderRadius: 16, padding: 16, marginBottom: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.04)" },
-  input: { width: "100%", padding: 12, marginBottom: 10, borderRadius: 12, border: "1px solid rgba(0,0,0,0.08)", boxSizing: "border-box", fontSize: 14 },
+  input: {
+    width: "100%",
+    padding: "12px",
+    borderRadius: 8,
+    border: "1px solid #d1d5db", // Standard gray border
+    fontSize: 14,
+    fontFamily: "-apple-system, BlinkMacSystemFont, SF Pro Display, Inter, sans-serif",
+    color: "#1d1d1f",
+    background: "#fafafa",
+    boxSizing: "border-box", // Prevents overflow
+    marginTop: "8px",
+    marginBottom: "8px",
+  },
   addBtn: { width: "100%", padding: 12, background: "#1d1d1f", color: "#fff", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600 },
   filters: { display: "flex", gap: 8, marginBottom: 12 },
   filter: { padding: "7px 12px", borderRadius: 999, background: "#f5f5f5", border: "1px solid rgba(0,0,0,0.06)", fontSize: 12, cursor: "pointer" },
