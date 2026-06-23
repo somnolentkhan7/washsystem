@@ -7,7 +7,6 @@ import {
 } from "@react-google-maps/api";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 
-type JobFilter = "all" | "pending" | "done";
 
 /* ---------------- TYPES ---------------- */
 type Customer = {
@@ -32,7 +31,7 @@ type DoorPinStatus =
   | "made_sale"
   | "note";
 
-type DateFilter = "all" | "today" | "week" | "month";
+type DateFilter = "all" | "today" | "3days" | "week" | "month";
 
 type DoorPin = {
   id: string;
@@ -536,7 +535,7 @@ export default function MapView({
         <button
           key={filter.key}
           onClick={() => {
-            setDateFilter(filter.key as JobFilter);
+            setDateFilter(filter.key as DateFilter);
           }}
           style={
             dateFilter === filter.key
