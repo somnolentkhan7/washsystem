@@ -507,14 +507,16 @@ export default function MapView({
  
 
       {/* My Location button */}
-      <button
-        onClick={centerOnMe}
-        disabled={isLocating}
-        style={styles.myLocationBtn}
-        title="Center on my location"
-      >
-        {isLocating ? "⏳" : "🎯"}
-      </button>
+      {!selected && (
+  <button
+    onClick={centerOnMe}
+    disabled={isLocating}
+    style={styles.myLocationBtn}
+    title="Center on my location"
+  >
+    {isLocating ? "⏳" : "🎯"}
+  </button>
+)}
 
       <button
   onClick={() => setShowSettings(!showSettings)}
@@ -766,20 +768,25 @@ settingsMenu: {
   },
   eyebrow: { fontSize: 11, fontWeight: 700, textTransform: "uppercase" as const, color: "#6b7280" },
   sheet: {
-    position: "absolute",
-    right: 10,
-    bottom: "calc(10px + env(safe-area-inset-bottom))",
-    width: "min(380px, calc(100% - 20px))",
-    maxHeight: "min(56vh, 430px)",
-    overflowY: "auto" as const,
-    WebkitOverflowScrolling: "touch",
-    background: "#fff",
-    border: "1px solid rgba(17,24,39,0.08)",
-    borderRadius: 14,
-    padding: 14,
-    zIndex: 3,
-    boxShadow: "0 18px 44px rgba(15,23,42,0.24)",
-  },
+  position: "absolute",
+  left: 10,
+  right: 10,
+  bottom: 80,
+
+  maxWidth: 420,
+  margin: "0 auto",
+
+  background: "#fff",
+  border: "1px solid rgba(17,24,39,0.08)",
+  borderRadius: 14,
+  padding: 14,
+
+  zIndex: 50,
+  maxHeight: "55vh",
+  overflowY: "auto",
+
+  boxShadow: "0 18px 44px rgba(15,23,42,0.24)",
+},
   sheetHeader: { display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" },
   sheetTitle: { fontSize: 19, fontWeight: 800, color: "#111827" },
   closeButton: { width: 34, height: 34, borderRadius: 999, border: "1px solid #e5e7eb", background: "#fff", color: "#6b7280", cursor: "pointer", fontWeight: 800 },
