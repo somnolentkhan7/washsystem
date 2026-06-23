@@ -7,6 +7,8 @@ import {
 } from "@react-google-maps/api";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 
+type JobFilter = "all" | "pending" | "done";
+
 /* ---------------- TYPES ---------------- */
 type Customer = {
   id: string;
