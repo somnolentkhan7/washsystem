@@ -534,7 +534,7 @@ export default function MapView({
         <button
           key={filter.key}
           onClick={() => {
-            setDateFilter(filter.key);
+            setDateFilter(filter.key as JobFilter);
           }}
           style={
             dateFilter === filter.key

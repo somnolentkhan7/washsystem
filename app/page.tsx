@@ -28,7 +28,7 @@ type Customer = {
 /* ---------------- CONSTANTS ---------------- */
 const HOME = { lat: 30.2032, lng: -97.85231 };
 const SERVICES = ["Driveway", "Sidewalk", "Patio", "Trashcans"];
-const FILTERS = ["all", "pending", "done"] as const;
+const FILTERS: JobFilter[] = ["all", "pending", "done"];
 const TABS = ["dashboard", "customers", "map", "calendar", "insights", "productivity", "rates"] as const;
 const SERVICE_ORDER = ["Driveway", "Sidewalk", "Patio", "Trashcans"];
 const DEFAULT_RATES = {
@@ -309,6 +309,7 @@ function ProductivityTab() {
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
+  type JobFilter = "all" | "pending" | "done";
   const [isMobile, setIsMobile] = useState(false);
   const mobile = isMobile;
 
@@ -327,7 +328,7 @@ export default function Home() {
   const [completionPrice, setCompletionPrice] = useState<number>(0);
   const [tab, setTab] = useState<(typeof TABS)[number]>("dashboard");
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [jobFilter, setJobFilter] = useState<"all" | "pending" | "done">("all");
+  const [jobFilter, setJobFilter] = useState<JobFilter>("all");
   const [weekOffset, setWeekOffset] = useState(0);
   const [hoverDate, setHoverDate] = useState<string | null>(null);
   const [dayStartTime, setDayStartTime] = useState("09:00");
