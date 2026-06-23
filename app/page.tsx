@@ -4,6 +4,7 @@ import MapView from "../components/MapView";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import InsightsTab from "./InsightsTab";
+import ProductivityTab from "./ProductivityTab";
 
 /* ---------------- TYPES ---------------- */
 type Customer = {
@@ -254,89 +255,7 @@ function AddressInput({
 );
 }
 
-function ProductivityTab() {
-  const [now, setNow] = useState(new Date());
 
-  useEffect(() => {
-    const interval = setInterval(() => { setNow(new Date()); }, 30 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const currentDay = now.toLocaleDateString("en-US", { weekday: "long" });
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const DAY_START = 9 * 60;
-  const DAY_END = 20 * 60;
-  const progress = Math.min(Math.max((currentMinutes - DAY_START) / (DAY_END - DAY_START), 0), 1) * 100;
-
-  const getCurrentBlock = () => {
-    if (currentMinutes >= 9 * 60 && currentMinutes < 13 * 60) return "wash";
-    if (currentMinutes >= 13 * 60 && currentMinutes < 15.5 * 60) return "reset";
-    if (currentMinutes >= 16 * 60 && currentMinutes < 20 * 60) return "sales";
-    return null;
-  };
-
-  const activeBlock = getCurrentBlock();
-  const productionIntensity =
-    activeBlock === "wash" ? "HIGH OUTPUT MODE" :
-    activeBlock === "sales" ? "REVENUE HUNT MODE" :
-    activeBlock === "reset" ? "RECOVERY MODE" : "OFF-SEASON MODE";
-
-  const weekSchedule = [
-    { day: "Monday", blocks: [{ time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" }, { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" }, { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" }] },
-    { day: "Tuesday", blocks: [{ time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" }, { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" }, { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" }] },
-    { day: "Wednesday", blocks: [{ time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" }, { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" }, { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" }] },
-    { day: "Thursday", blocks: [{ time: "9:00 AM - 1:00 PM", task: "Pressure Washing Jobs", emoji: "🧼", key: "wash" }, { time: "1:00 PM - 3:30 PM", task: "Lunch • Shower • Quotes", emoji: "🍽️", key: "reset" }, { time: "4:00 PM - 8:00 PM", task: "Door-to-Door Sales", emoji: "🚪", key: "sales" }] },
-    { day: "Friday", blocks: [{ time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰", key: "wash" }] },
-    { day: "Saturday", blocks: [{ time: "9:00 AM - 4:00 PM", task: "Production Day", emoji: "💰", key: "wash" }] },
-    { day: "Sunday", blocks: [{ time: "ALL DAY", task: "Recovery / Reset", emoji: "🌴", key: "reset" }] },
-  ];
-
-  return (
-    <div style={styles.card}>
-      <h2 style={{ marginTop: 0 }}>Weekly Game Plan</h2>
-      <div style={{ fontSize: 13, opacity: 0.7 }}>Current time: <strong>{now.toLocaleTimeString()}</strong></div>
-      <div style={{ fontWeight: 600, marginTop: 6, marginBottom: 10 }}>
-        {activeBlock ? `NOW: ${activeBlock.toUpperCase()} BLOCK` : "NOW: OFF BLOCK (SCHEDULE STILL ACTIVE)"}
-        <div style={{ marginTop: 10, padding: 12, borderRadius: 14, background: activeBlock === "wash" ? "linear-gradient(135deg, #dbeafe, #eff6ff)" : activeBlock === "sales" ? "linear-gradient(135deg, #dcfce7, #f0fdf4)" : activeBlock === "reset" ? "linear-gradient(135deg, #f3f4f6, #ffffff)" : "linear-gradient(135deg, #f9fafb, #ffffff)", border: "1px solid rgba(0,0,0,0.06)" }}>
-          <div style={{ fontSize: 12, opacity: 0.6 }}>Mode</div>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>{productionIntensity}</div>
-          <div style={{ fontSize: 12, marginTop: 6, opacity: 0.7 }}>
-            {activeBlock === "wash" && "Focus: high-ticket exterior surface cleaning + fast turnover"}
-            {activeBlock === "sales" && "Focus: closing deals, follow-ups, and upsells"}
-            {activeBlock === "reset" && "Recover energy, prep quotes, admin tasks"}
-            {!activeBlock && "Plan your day — no active block right now"}
-          </div>
-        </div>
-      </div>
-      <div style={{ position: "relative", height: 10, background: "#e5e7eb", borderRadius: 999, marginBottom: 18, overflow: "hidden" }}>
-        <div style={{ width: `${progress}%`, height: "100%", background: "linear-gradient(90deg, #2563eb, #60a5fa)", transition: "width 0.5s linear" }} />
-        <div style={{ position: "absolute", left: `${progress}%`, top: "50%", transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: "#fff", border: "3px solid #2563eb", boxShadow: "0 0 10px rgba(37,99,235,0.6)", transition: "left 0.5s linear" }} />
-      </div>
-      <div style={{ display: "grid", gap: 14 }}>
-        {weekSchedule.map((day) => {
-          const isToday = day.day === currentDay;
-          return (
-            <div key={day.day} style={{ background: isToday ? "#f5f9ff" : "#fafafa", border: isToday ? "2px solid #2563eb" : "1px solid rgba(0,0,0,0.05)", borderRadius: 16, padding: 16 }}>
-              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>{day.day}</div>
-              {day.blocks.map((block) => {
-                const isActive = isToday && activeBlock === block.key;
-                return (
-                  <div key={block.time} style={{ display: "flex", gap: 12, alignItems: "center", padding: "10px 12px", borderRadius: 12, background: isActive ? "#dbeafe" : isToday ? "#f3f4f6" : "#fff", border: isActive ? "2px solid #2563eb" : "1px solid #ececec", marginBottom: 8, boxShadow: isActive ? "0 0 0 3px rgba(37,99,235,0.15)" : "none" }}>
-                    <span style={{ fontSize: 18 }}>{block.emoji}</span>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>{block.time}</div>
-                      <div style={{ fontSize: 13, opacity: 0.65 }}>{block.task}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
@@ -1037,7 +956,7 @@ export default function Home() {
       )}
 
       {tab === "insights" && <InsightsTab customers={customers} />}
-      {tab === "productivity" && <ProductivityTab />}
+      {tab === "productivity" && <ProductivityTab customers={customers} />}
 
       {tab === "rates" && (
         <div style={styles.card}>
