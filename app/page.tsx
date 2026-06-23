@@ -28,6 +28,7 @@ type Customer = {
 /* ---------------- CONSTANTS ---------------- */
 const HOME = { lat: 30.2032, lng: -97.85231 };
 const SERVICES = ["Driveway", "Sidewalk", "Patio", "Trashcans"];
+type JobFilter = "all" | "pending" | "done";
 const FILTERS: JobFilter[] = ["all", "pending", "done"];
 const TABS = ["dashboard", "customers", "map", "calendar", "insights", "productivity", "rates"] as const;
 const SERVICE_ORDER = ["Driveway", "Sidewalk", "Patio", "Trashcans"];
@@ -309,7 +310,6 @@ function ProductivityTab() {
 
 /* ---------------- PAGE ---------------- */
 export default function Home() {
-  type JobFilter = "all" | "pending" | "done";
   const [isMobile, setIsMobile] = useState(false);
   const mobile = isMobile;
 
