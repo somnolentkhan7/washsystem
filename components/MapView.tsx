@@ -220,12 +220,12 @@ export default function MapView({
   const [showClosest50, setShowClosest50] = useState(false);
 
   // Show all customer pins vs filtered by date
-  const [showAllCustomers, setShowAllCustomers] = useState(true);
-  const [showSettings, setShowSettings] = useState(false);
 
   const hasCenteredRef = useRef(false);
 
   const mapRef = useRef<google.maps.Map | null>(null);
+
+  const [showSettings, setShowSettings] = useState(false);
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
@@ -331,26 +331,37 @@ export default function MapView({
 
   // Which customer pins to show
   const customerPins = useMemo(() => {
-    if (showClosest50) return closest50CustomerPins;
-    if (showAllCustomers) return allCustomerPins;
-    return dateFilteredCustomerPins;
-  }, [showClosest50, showAllCustomers, allCustomerPins, dateFilteredCustomerPins, closest50CustomerPins]);
+  return closest50CustomerPins;
+}, [closest50CustomerPins]);
 
   const visibleDoorPins = useMemo(() => {
     return doorPins.filter((pin) => isIsoDateInFilter(pin.createdAt, dateFilter));
   }, [doorPins, dateFilter]);
 
   const mapOptions = useMemo(
-    () => ({
-      clickableIcons: false,
-      disableDefaultUI: true,
-      gestureHandling: "greedy",
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-    }),
-    []
-  );
+  () => ({
+    clickableIcons: false,
+    disableDefaultUI: true,
+    gestureHandling: "greedy",
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+
+    styles: [
+      {
+        featureType: "poi",
+        elementType: "all",
+        stylers: [{ visibility: "off" }],
+      },
+      {
+        featureType: "transit",
+        elementType: "all",
+        stylers: [{ visibility: "off" }],
+      },
+    ],
+  }),
+  []
+);
 
   async function addDoorPin(lat: number, lng: number) {
     const now = new Date().toISOString();
@@ -550,57 +561,6 @@ export default function MapView({
 
     {/* Customers */}
 
-    <div>
-      <div
-        style={{
-          fontSize: 12,
-          opacity: 0.7,
-          marginBottom: 6,
-        }}
-      >
-        Customer Pins
-      </div>
-
-      <button
-        onClick={() => {
-          setShowAllCustomers(true);
-          setShowClosest50(false);
-        }}
-        style={
-          showAllCustomers
-            ? styles.activePillBtn
-            : styles.pillBtn
-        }
-      >
-        All Customers
-      </button>
-
-      <button
-        onClick={() => {
-          setShowAllCustomers(false);
-          setShowClosest50(true);
-
-          if (mapRef.current) {
-            const center =
-              mapRef.current.getCenter();
-
-            if (center) {
-              setMapCenter({
-                lat: center.lat(),
-                lng: center.lng(),
-              });
-            }
-          }
-        }}
-        style={
-          showClosest50
-            ? styles.activePillBtn
-            : styles.pillBtn
-        }
-      >
-        Closest 50
-      </button>
-    </div>
   </div>
 )}
 
