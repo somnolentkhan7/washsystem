@@ -30,7 +30,7 @@ type DoorPinStatus =
   | "made_sale"
   | "note";
 
-type DateFilter = "today" | "two_days" | "week";
+type DateFilter = "all" | "today" | "week" | "month";
 
 type DoorPin = {
   id: string;
