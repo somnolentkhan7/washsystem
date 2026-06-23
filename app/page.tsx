@@ -1422,11 +1422,10 @@ function StatusBadge({ completed, large }: { completed: boolean; large?: boolean
   );
 }
 
-const formGroup = {
+const formGroup: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: 10,
-  
 };
 
 /* ---------------- STYLES ---------------- */
